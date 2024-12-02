@@ -247,7 +247,7 @@
 
             try {
                 // Make an API call to the backend server
-                const response = await fetch('http://localhost:5000/execute', {
+                const response = await fetch('http://localhost:5000/run-code', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ language, code }),
