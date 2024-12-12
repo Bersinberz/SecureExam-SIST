@@ -1,19 +1,15 @@
 {
-  "name": "secureexam-sist",
+  "name": "seb",
   "version": "1.0.0",
-  "main": "server.js",
+  "main": "src/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
-  },
+  "start": "electron ."
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
-  "dependencies": {
-    "body-parser": "^1.20.3",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.1",
-    "mongoose": "^8.8.3"
+  "devDependencies": {
+    "electron": "^33.2.1"
   }
 }
