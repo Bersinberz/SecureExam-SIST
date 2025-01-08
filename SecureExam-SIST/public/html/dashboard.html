@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exam Dashboard</title>
+  <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+  <header class="header">
+    <div class="logo">
+        <img src="../images/recruitment-at-sathyabama-institute-of-science-and-technology.png" alt="Sathyabama">
+    </div>
+    <span>SecureExam-SIST - Dashboard</span>
+  </header>
+
+  <main>
+    <section id="exam-settings">
+      <h2>Set Exam Details</h2>
+      <form id="exam-form">
+        <label for="exam-name">Exam Name:</label>
+        <input type="text" id="exam-name" name="exam-name" autocomplete="off" required>
+        
+        <label for="exam-time">Exam Time (hours and minutes):</label>
+        <div class="time-picker">
+          <label for="hours">Hours:</label>
+          <select id="hours">
+            <option value="" disabled selected>--</option>
+          </select>
+
+          <label for="minutes">Minutes:</label>
+          <select id="minutes">
+            <option value="" disabled selected>--</option>
+          </select>
+        </div>
+      </form>
+    </section>
+
+    <section id="questions-section">
+      <h2>Questions</h2>
+      <div id="questions-container">
+        <input type="file" id="file-upload" name="file-upload" />
+        <div class="loader" id="loader" style="display:none;"></div>
+        <div id="upload-success-message" style="display:none; color: green;">File uploaded successfully</div>
+        <button id="remove-file-button" style="display:none;" disabled>Remove File</button>
+      </div>
+
+      <div class="countdown" id="countdown"></div>
+    </section>
+    <button id="start-button" disabled>Start Exam</button>
+  </main>
+
+  <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+  <script src="../js/dashboard.js"></script>
+</body>
+</html>

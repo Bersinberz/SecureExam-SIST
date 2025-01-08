@@ -1,0 +1,315 @@
+/* General Styles */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    overflow: hidden;
+}
+
+body {
+    background: linear-gradient(135deg, #f5f5f5, #d3d3d3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* Header Styles */
+.header {
+    width: 100%;
+    background-color: #831238;
+    color: white;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.header .logo {
+    display: flex;
+    align-items: center;
+    padding: 0px 6rem;
+}
+
+.header span {
+    font-weight: bold;
+    font-size: 1.5rem;
+    padding: 1rem 4rem;
+}
+
+.header .logo img {
+    width: 19rem;
+    height: 4rem;
+}
+
+/* Main Container */
+.main-container {
+    display: flex;
+    flex-grow: 1;
+    width: 100%;
+    margin-top: -20px;
+    overflow: hidden;
+}
+
+/* Problem Section */
+.problem-container {
+    flex: 1;
+    background: white;
+    padding: 20px;
+    padding-top: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+}
+
+.problem-container h2 {
+    margin: 0;
+    color: #831238;
+}
+
+/* Compiler Section */
+.compiler-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+#editor-container {
+    flex: 2;
+    height: 300px;
+    border-radius: 10px;
+    background-color: #2c3e50;
+}
+
+#output-container {
+    margin-top: 10px;
+    flex: 1;
+    background-color: #000000;
+    color: #ffffff;
+    padding: 10px;
+    font-family: monospace;
+    border-radius: 10px;
+    overflow-y: auto;
+}
+
+/* Button Section Layout */
+.button-section {
+    display: flex;
+    justify-content: space-between; /* Distribute the buttons across the container */
+    align-items: center; /* Vertically center the buttons */
+    padding: 15px 60px;
+    background-color: white;
+    width: 100%;
+    transform: translateY(-10px);
+}
+
+.button-section .button {
+    padding: 10px 20px;
+    background-color: #831238;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.button-section .left-buttons {
+    display: flex;
+    gap: 10px;
+    transform: translateX(30px); /* Space between left buttons */
+}
+
+.button-section .center-button {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.button-section .right-buttons {
+    display: flex;
+    gap: 10px; /* Space between right buttons */
+    transform: translateX(-20px);
+}
+
+/* Run Button Styles */
+#run-button-container button {
+    font-family: inherit;
+    font-size: 16px;
+    background: #831238;
+    color: white;
+    padding: 0.5em 0.8em;
+    padding-left: 0.9em;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    border: none;
+    border-radius: 50px;
+    font-weight: 1000;
+}
+
+#run-button-container button span {
+    display: block;
+    margin-left: 0.3em;
+    transition: all 0.3s ease-in-out;
+}
+
+#run-button-container button svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+    transform-origin: center center;
+    transition: transform 0.3s ease-in-out;
+}
+
+#run-button-container button:hover {
+    background: #000;
+}
+
+#run-button-container button:hover .svg-wrapper {
+    transform: scale(1.25);
+    transition: 0.5s linear;
+}
+
+#run-button-container button:hover svg {
+    transform: translateX(1.2em) scale(1.1);
+    fill: #fff;
+}
+
+#run-button-container button:hover span {
+    opacity: 0;
+    transition: 0.5s linear;
+}
+
+#run-button-container button:active {
+    transform: scale(0.95);
+}
+
+/* Quit Button styles */
+#quitButton {
+    font-size: 18px;
+    display: inline-block;
+    outline: 0;
+    border: 0;
+    cursor: pointer;
+    background: radial-gradient(100% 100% at 100% 0%, #dd5482 0%, #831238 100%);
+    padding: 0 2em;
+    height: 2.6em;
+    color: #fff;
+    border-radius: 20px;
+
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+#quitButton:hover {
+    box-shadow: 0px 0.1em 0.2em rgb(45 35 66 / 40%), 0px 0.4em 0.7em -0.1em rgb(45 35 66 / 30%), inset 0px -0.1em 0px #db5a85;
+    transform: translateY(-0.1em);
+}
+
+#quitButton:active {
+    box-shadow: inset 0px 0.1em 0.6em #831238;
+    transform: translateY(0em);
+}
+
+/* Switch styles */
+.switch {
+    font-size: 17px;
+    position: relative;
+    display: inline-block;
+    width: 3.5em;
+    height: 2em;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #223243;
+    transition: .4s;
+    border-radius: 30px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 1.4em;
+    width: 1.4em;
+    border-radius: 20px;
+    left: 0.3em;
+    bottom: 0.3em;
+    background-color: #223243;
+    box-shadow: inset 2px -2px 0 1.8px #fff;
+    transition: .4s;
+}
+
+.switch input:checked + .slider:before {
+    background-color: yellow;
+    box-shadow: none;
+    transform: translateX(1.5em);
+}
+
+/* Right Button Styles (optional, for uniformity) */
+.right-buttons {
+    display: flex;
+    gap: 10px; /* Space between right buttons */
+    align-items: center; /* Center the switch and button vertically */
+}
+
+/* Common styles for buttons in the left section */
+.left-buttons button, 
+.left-buttons select {
+    font-family: inherit;
+    font-size: 16px;
+    padding: 8px 16px;
+    background: transparent;
+    color: #831238;
+    border: 2px solid #831238;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+/* Rounded look for the dropdown */
+.left-buttons select {
+    border-radius: 6px;
+    padding-right: 24px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background: transparent url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" fill="%23831238" viewBox="0 0 24 24" width="20" height="20"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 10px center;
+    background-size: 16px;
+}
+
+/* Hover effect */
+.left-buttons button:hover, 
+.left-buttons select:hover {
+    background: #831238;
+    color: white;
+}
+
+/* Active effect */
+.left-buttons button:active, 
+.left-buttons select:active {
+    transform: scale(0.95);
+}
+
+/* Layout styles for left section */
+.left-buttons {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
