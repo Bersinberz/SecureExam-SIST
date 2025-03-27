@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Exam Dashboard</title>
+    <link rel="stylesheet" href="../css/dashboard.css" />
+  </head>
+  <body>
+    <!-- header section -->
+    <header class="header">
+      <div class="logo">
+        <img
+          src="../images/recruitment-at-sathyabama-institute-of-science-and-technology.png"
+          alt="Sathyabama"
+        />
+      </div>
+      <div class="right-image">
+        <img src="../images/securelogo.png" alt="Right Image" />
+      </div>
+    </header>
+
+    <main class="dashboard-container">
+      <!-- Exam details section (left) -->
+      <section id="exam-settings" class="left-section">
+        <h2>Exam Details</h2>
+        <form id="exam-form">
+          <label for="exam-name">Exam Name:</label>
+          <input
+            type="text"
+            id="exam-name"
+            name="exam-name"
+            autocomplete="off"
+            required
+          />
+
+          <label for="exam-time">Exam Time (hours and minutes):</label>
+          <div class="time-picker">
+            <label for="hours">Hours:</label>
+            <select id="hours">
+              <option value="" disabled selected>--</option>
+            </select>
+
+            <label for="minutes">Minutes:</label>
+            <select id="minutes">
+              <option value="" disabled selected>--</option>
+            </select>
+          </div>
+
+          <!-- Department and class selection -->
+          <div class="exam-section">
+            <div class="dropdown-container">
+              <div>
+                <label for="department-select">Department:</label>
+                <select id="department-select" name="department">
+                  <option value="" disabled selected>Select department</option>
+                  <option value="AI">AI</option>
+                  <option value="AIML">AIML</option>
+                  <option value="AIDS">AIDS</option>
+                  <option value="AIR">AIR</option>
+                  <option value="CS">CS</option>
+                  <option value="BCT">BCT</option>
+                  <option value="IOT">IOT</option>
+                  <option value="CSE">CSE</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="class-select">Class:</label>
+                <select id="class-select" name="section">
+                  <option value="" disabled selected>Select class</option>
+                  <option value="A1">A1</option>
+                  <option value="A2">A2</option>
+                  <option value="A3">A3</option>
+                  <option value="A4">A4</option>
+                  <option value="A5">A5</option>
+                  <option value="A6">A6</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- Questions selection section (right) -->
+      <section id="questions-section" class="right-section">
+        <h2>Questions</h2>
+        <form id="file-upload-form">
+          <label for="file-input" class="drop-container">
+            <span class="drop-title">Drop files here</span> or
+            <input type="file" id="file-input" required />
+          </label>
+        </form>
+
+        <div id="loader" class="loader" style="display: none">Uploading...</div>
+
+        <button id="remove-file-button" style="display: none" disabled>
+          Remove file
+        </button>
+      </section>
+    </main>
+
+    <button id="start-button">Start Exam</button>
+
+    <footer>
+      <div class="news-text">
+        <div class="scrolling-text">
+          © Developed by AIML students | SCAS - Sathyabama Institute Of Science and Technology
+        </div>
+      </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="../js/dashboard.js"></script>
+  </body>
+</html>
