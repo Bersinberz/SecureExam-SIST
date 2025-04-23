@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureExam-SIST</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/compiler.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header">
+        <div class="logo">
+            <img src="../images/recruitment-at-sathyabama-institute-of-science-and-technology.png" alt="Sathyabama">
+        </div>
+        <div class="user-info">
+            <div id="user-details"></div>
+        </div>
+    </header>
+
+    <!-- Button Section -->
+    <div class="button-section">
+        <div class="left-buttons">
+            <select id="language-select">
+                <option value="javascript" selected>JavaScript</option>
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+                <option value="c">C</option>
+                <option value="cpp">C++</option>
+            </select>
+        </div>
+        <div id="run-button-container">
+            <button id="run-button">
+                <div class="svg-wrapper-1">
+                    <div class="svg-wrapper">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30" class="icon">
+                            <path d="M8 5v14l11-7z" fill="currentColor"></path>
+                        </svg>
+                    </div>
+                </div>
+                <span>Run</span>
+            </button>
+        </div>
+        <div class="right-buttons">
+            <div id="time">
+                <i class="fas fa-clock"></i>
+                <span id="timer"></i>00:00</span>
+            </div>
+            
+            <button id="quitButton">Submit</button>
+        </div>
+    </div>
+
+    <!-- Main Content Section -->
+    <div class="main-container">
+        <div class="problem-container">
+            <span id="exam-name"></span>
+            <h2 style="margin-top: 20px;">Problem Statement:</h2>
+            <h3>Question:</h3>
+            <p id="assigned-question"></p>
+            
+
+            <h3>Input Format:</h3>
+            <p id="input-format">
+                No user input is required for this problem. All necessary values should be assigned directly within the code.  
+                Ensure that your implementation follows this approach to avoid any unexpected input-related errors.
+            </p>
+            
+            <h3>Output Format:</h3>
+            <p id="output-format">
+                The output should be displayed exactly as specified in the problem statement. Ensure that the format is clear,  
+                follows the expected structure, and includes necessary spacing or precision if applicable. Any deviation  
+                from the expected output format may result in incorrect evaluation.
+            </p>
+
+            <p class="note-box">
+                <strong>Note:</strong> This is a secure and monitored exam platform. Once the timer ends, the exam will begin automatically. Each candidate can attempt the exam only once, and re-login is not allowed after finishing. Any malpractice will result in strict action. All the best!
+            </p>
+        </div>
+        <div class="compiler-container">
+            <div id="editor-container"></div>
+            <div id="output-container">
+                <pre id="output-content"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/monaco-editor/min/vs/loader.js"></script>
+    <script src="../js/compiler.js"></script>
+</body>
+</html>

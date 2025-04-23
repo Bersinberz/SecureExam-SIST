@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | SecureExam</title>
+  <link rel="stylesheet" href="../css/index.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <!-- Header Section -->
+  <header class="header">
+    <div class="logo">
+      <img src="../images/recruitment-at-sathyabama-institute-of-science-and-technology.png" alt="Sathyabama">
+    </div>
+    <div class="right-image">
+      <img src="../images/securelogo.png" alt="Right Image">
+    </div>
+  </header>
+
+
+  <!-- Login Form Section -->
+  <div class="login-container">
+    <img src="../images/images-removebg-preview.png" alt="Sathyabama logo" style="width: 30%;">
+
+    <!-- User Type Dropdown -->
+    <select id="userType" required>
+      <option value="" disabled selected>Select User Type</option>
+      <option value="student">Student</option>
+      <option value="staff">Staff</option>
+    </select>
+
+    <!-- Form for student or staff login -->
+    <form id="loginForm">
+      <div id="studentForm" class="login-fields" style="display: none;">
+        <input type="text" id="registerNumber" placeholder="Register Number" required autocomplete="off">
+      </div>
+
+      <div id="staffForm" class="login-fields" style="display: none;">
+        <input type="email" id="email" placeholder="Email" required autocomplete="off">
+      </div>
+
+      <input type="password" id="password" placeholder="Enter Password" required>
+      <button type="submit">Login</button>
+    </form>
+  </div>
+
+  <!-- Custom Success Modal -->
+  <div id="successModal" class="custom-modal" style="display: none;">
+    <div class="custom-modal-content">
+      <h2>Welcome to the Exam!</h2>
+      <p>You are using SecureExam-SIST.</p>
+      <p>Please read the instructions carefully:</p>
+      <ul>
+        <li>As soon as the timer ends, the exam will begin.</li>
+        <li>Once you click the "Finish" button, the exam will end and the app will quit automatically.</li>
+        <li>Candidates are not allowed to login more than once. Once you finish your exam, you cannot login again.</li>
+        <li>You are being monitored, severe actions will be taken if candidates are found indulging in malpractice.</li>
+        <li>This is a secure platform for Exams.</li>
+        <li>All the very Best!</li>
+      </ul>
+      <button class="cssbuttons-io-button" id="startExamBtn">
+        Get started
+        <div class="icon">
+          <svg height="24" width="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M16.172 11l-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z"
+              fill="currentColor"></path>
+          </svg>
+        </div>
+      </button>
+    </div>
+  </div>
+
+
+  <!-- Loading Spinner -->
+  <div id="loadingSpinner" class="spinner-container" style="display: none;">
+    <div class="loader"></div>
+  </div>
+
+  <footer>
+    <div class="news-text">
+      <div class="scrolling-text">
+        © Developed by AIML students | SCAS - Sathyabama Institute Of Science and Technology
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- Scripts -->
+  <script src="../js/index.js"></script>
+</body>
+
+</html>
