@@ -119,16 +119,6 @@ p {
   background-color: #000000;
 }
 
-#output-container {
-  margin-top: 10px;
-  flex: 1;
-  background-color: #e6ebec;
-  color: #000000;
-  padding: 10px;
-  font-family: monospace;
-  overflow-y: auto;
-}
-
 /* Button Section Layout */
 .button-section {
   display: flex;
@@ -273,9 +263,7 @@ p {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  background: transparent
-    url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" fill="%23831238" viewBox="0 0 24 24" width="20" height="20"><path d="M7 10l5 5 5-5z"/></svg>')
-    no-repeat right 10px center;
+  background: transparent url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" fill="%23831238" viewBox="0 0 24 24" width="20" height="20"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 10px center;
   background-size: 16px;
 }
 
@@ -405,4 +393,144 @@ p {
   color: #856404;
   box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.1);
   border-radius: 5px;
+}
+
+/* VS Code-like Terminal Styles */
+#terminal-container {
+  background-color: #1E1E1E;
+  color: #CCCCCC;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  height: 300px;
+  /* Increased terminal height */
+  border-top: 1px solid #252526;
+  position: relative;
+}
+
+#terminal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 10px;
+  background-color: #252526;
+  color: #FFFFFF;
+  font-size: 12px;
+  user-select: none;
+}
+
+.terminal-actions {
+  display: flex;
+  gap: 8px;
+}
+
+#terminal-header button {
+  background: none;
+  border: none;
+  color: #CCCCCC;
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+#terminal-header button:hover {
+  background-color: #2A2D2E;
+}
+
+#terminal-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 8px;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  height: calc(100% - 30px);
+}
+
+#terminal-content:focus {
+  outline: none;
+}
+
+.terminal-line {
+  margin: 0;
+  padding: 0;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.terminal-command {
+  color: #4EC9B0;
+}
+
+.terminal-output {
+  color: #D4D4D4;
+}
+
+.terminal-error {
+  color: #F48771;
+}
+
+.terminal-warning {
+  color: #CCA700;
+}
+
+.terminal-prompt {
+  color: #569CD6;
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.terminal-prompt span {
+  margin-right: 8px;
+}
+
+.terminal-input {
+  background: transparent;
+  border: none;
+  color: #D4D4D4;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 14px;
+  flex-grow: 1;
+  outline: none;
+  caret-color: #FFFFFF;
+  white-space: pre-wrap;
+}
+
+.collapsed {
+  height: 30px !important;
+  overflow: hidden;
+}
+
+#terminal-kill {
+  display: none;
+}
+
+.running #terminal-kill {
+  display: block;
+}
+
+.running .fa-skull {
+  color: #F48771;
+}
+
+.terminal-input-prompt {
+  display: flex;
+  align-items: center;
+  margin: 5px 0;
+}
+
+.terminal-input-prompt>span {
+  color: #569CD6;
+  margin-right: 8px;
+}
+
+.terminal-input-prompt>[contenteditable] {
+  flex-grow: 1;
+  background: transparent;
+  border: none;
+  color: #D4D4D4;
+  outline: none;
+  caret-color: white;
 }

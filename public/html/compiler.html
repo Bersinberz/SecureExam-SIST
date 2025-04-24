@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/compiler.css">
 </head>
+
 <body>
     <!-- Header Section -->
     <header class="header">
@@ -46,7 +48,7 @@
                 <i class="fas fa-clock"></i>
                 <span id="timer"></i>00:00</span>
             </div>
-            
+
             <button id="quitButton">Submit</button>
         </div>
     </div>
@@ -58,29 +60,47 @@
             <h2 style="margin-top: 20px;">Problem Statement:</h2>
             <h3>Question:</h3>
             <p id="assigned-question"></p>
-            
+
 
             <h3>Input Format:</h3>
             <p id="input-format">
-                No user input is required for this problem. All necessary values should be assigned directly within the code.  
+                No user input is required for this problem. All necessary values should be assigned directly within the
+                code.
                 Ensure that your implementation follows this approach to avoid any unexpected input-related errors.
             </p>
-            
+
             <h3>Output Format:</h3>
             <p id="output-format">
-                The output should be displayed exactly as specified in the problem statement. Ensure that the format is clear,  
-                follows the expected structure, and includes necessary spacing or precision if applicable. Any deviation  
+                The output should be displayed exactly as specified in the problem statement. Ensure that the format is
+                clear,
+                follows the expected structure, and includes necessary spacing or precision if applicable. Any deviation
                 from the expected output format may result in incorrect evaluation.
             </p>
 
             <p class="note-box">
-                <strong>Note:</strong> This is a secure and monitored exam platform. Once the timer ends, the exam will begin automatically. Each candidate can attempt the exam only once, and re-login is not allowed after finishing. Any malpractice will result in strict action. All the best!
+                <strong>Note:</strong> This is a secure and monitored exam platform. Once the timer ends, the exam will
+                begin automatically. Each candidate can attempt the exam only once, and re-login is not allowed after
+                finishing. Any malpractice will result in strict action. All the best!
             </p>
         </div>
         <div class="compiler-container">
             <div id="editor-container"></div>
-            <div id="output-container">
-                <pre id="output-content"></pre>
+            <div id="terminal-container">
+                <div id="terminal-header">
+                    <span>Terminal</span>
+                    <div class="terminal-actions">
+                        <button id="terminal-kill" title="Kill running process">
+                            <i class="fas fa-skull"></i>
+                        </button>
+                        <button id="clear-terminal" title="Clear terminal">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button id="terminal-collapse" title="Collapse terminal">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="terminal-content"></div>
             </div>
         </div>
     </div>
@@ -89,4 +109,5 @@
     <script src="https://unpkg.com/monaco-editor/min/vs/loader.js"></script>
     <script src="../js/compiler.js"></script>
 </body>
+
 </html>
