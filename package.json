@@ -76,5 +76,13 @@
   },
   "keywords": [],
   "author": "Your Name",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bersinberz/SecureExam-SIST.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Bersinberz/SecureExam-SIST/issues"
+  },
+  "homepage": "https://github.com/Bersinberz/SecureExam-SIST#readme"
 }
