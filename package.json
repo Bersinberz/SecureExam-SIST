@@ -4,14 +4,14 @@
   "description": "SecureExam-SIST Kiosk Mode",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
-    "build": "electron-builder",
-    "start:main": "node server.js",
-    "start:compiler": "node compilerserver.js"
+  "start": "concurrently \"node server.js\" \"node compilerserver.js\"",
+  "build": "electron-builder",  
+  "dev": "concurrently \"node server.js\" \"node compilerserver.js\""  
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
+    "concurrently": "^9.1.2",
     "cors": "^2.8.5",
     "csv-parser": "^3.2.0",
     "docx": "^9.1.1",
