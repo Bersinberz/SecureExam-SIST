@@ -446,6 +446,6 @@ app.get("/api/all-codes", async (req, res) => {
 });
 
 // Start the server
-app.listen(PORT, ipAddress, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🌍 Server is live at http://${ipAddress}:${PORT}`);
 });
