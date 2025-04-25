@@ -1,0 +1,2 @@
+npm install express mongoose dotenv body-parser express-rate-limit
+npx electron-builder --win
