@@ -4,9 +4,9 @@
   "description": "SecureExam-SIST Kiosk Mode",
   "main": "main.js",
   "scripts": {
-  "start": "concurrently \"node server.js\" \"node compilerserver.js\"",
-  "build": "electron-builder",  
-  "dev": "concurrently \"node server.js\" \"node compilerserver.js\""  
+    "start": "concurrently \"node server.js\" \"node compilerserver.js\"",
+    "build": "electron-builder",  
+    "dev": "concurrently \"node server.js\" \"node compilerserver.js\""  
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
