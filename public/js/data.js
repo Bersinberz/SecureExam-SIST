@@ -65,7 +65,7 @@ async function fetchStudentDetails() {
   try {
     showLoader();
     const response = await fetch(
-      `http://172.20.10.2:3000/api/students?department=${department}&section=${section}`
+      `http://10.128.0.50:80/api/students?department=${department}&section=${section}`
     );
     let students = await response.json();
     hideLoader();
@@ -89,7 +89,7 @@ async function fetchStudentDetails() {
 // Fetch and update code submissions
 async function fetchCodeSubmissions() {
   try {
-    const response = await fetch("http://172.20.10.2:3000/api/all-codes");
+    const response = await fetch("http://10.128.0.50/api/all-codes");
     let submissions = await response.json();
 
     if (!response.ok) return;
@@ -319,7 +319,7 @@ async function finishExam() {
     console.log(section);
 
     try {
-      const response = await fetch("http://172.20.10.2:3000/api/exam/finish", {
+      const response = await fetch("http://10.128.0.50:80/api/exam/finish", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

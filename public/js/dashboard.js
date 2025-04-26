@@ -144,7 +144,7 @@ startButton.addEventListener("click", () => {
         formData.append("file", fileUploadInput.files[0]);
     }
 
-    fetch("http://172.20.10.2:3000/api/exam/start", {
+    fetch("http://10.128.0.50:80/api/exam/start", {
         method: "POST",
         body: formData,
     })

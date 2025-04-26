@@ -149,8 +149,8 @@ const getDeviceIp = () => {
 };
 
 // Start the server
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 const IP = getDeviceIp();
-app.listen(PORT, IP, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://${IP}:${PORT}`);
 });

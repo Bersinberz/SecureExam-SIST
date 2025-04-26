@@ -9,10 +9,8 @@ const path = require("path");
 const rateLimit = require('express-rate-limit');
 const os = require("os");
 const fs = require("fs");
-
-// Initialize Express app
 const app = express();
-const PORT = 3000;
+
 
 // Basic rate limiting for all routes
 const globalLimiter = rateLimit({
@@ -446,6 +444,7 @@ app.get("/api/all-codes", async (req, res) => {
 });
 
 // Start the server
+const PORT = 80;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🌍 Server is live at http://${ipAddress}:${PORT}`);
 });

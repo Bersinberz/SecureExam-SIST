@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
         const response = await fetch(
-            `http://172.20.10.2:4500/api/exam/get?registerNumber=${registerNumber}`
+            `http://10.128.0.50:80/api/exam/get?registerNumber=${registerNumber}`
         );
         const data = await response.json();
 
@@ -108,7 +108,7 @@ runButton.addEventListener("click", async () => {
     outputContent.textContent = "Running...";
 
     try {
-        const response = await fetch("http://172.20.10.2:3001/run-code", {
+        const response = await fetch("172.20.10.2:3000/run-code", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ language, code }),
@@ -146,7 +146,7 @@ async function submitCode() {
         document.getElementById("assigned-question").textContent;
 
     try {
-        const response = await fetch("http://172.20.10.2:3001/api/code/submit", {
+        const response = await fetch("http://10.128.0.50:3000/api/code/submit", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -428,7 +428,7 @@ async function handlePipCommand(command) {
         const controller = new AbortController();
         currentProcess = controller;
         
-        const response = await fetch("http://172.20.10.2:3001/run-code", {
+        const response = await fetch("http://10.128.0.50:3000/run-code", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
@@ -468,7 +468,7 @@ async function runCodeInTerminal() {
         currentProcess = controller;
         
         // First execution to detect if input is needed
-        const response = await fetch("http://172.20.10.2:3001/run-code", {
+        const response = await fetch("http://10.128.0.50:3000/run-code", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ language, code }),
@@ -496,7 +496,7 @@ async function runCodeInTerminal() {
                 if (userInput === null) return; // User cancelled
                 
                 // Send input to server
-                const inputResponse = await fetch("http://172.20.10.2:3001/run-code", {
+                const inputResponse = await fetch("http://10.128.0.50:3000/run-code", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ 
