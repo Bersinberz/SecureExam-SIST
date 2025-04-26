@@ -146,7 +146,7 @@ async function submitCode() {
         document.getElementById("assigned-question").textContent;
 
     try {
-        const response = await fetch("http://10.128.0.50:3000/api/code/submit", {
+        const response = await fetch("http://10.128.0.50:5000/api/code/submit", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

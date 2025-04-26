@@ -102,7 +102,7 @@ loginForm.addEventListener("submit", async (event) => {
     loadingSpinner.style.display = "flex";
 
     try {
-        const response = await fetch("http://10.128.0.50:80/login", {
+        const response = await fetch("http://10.128.0.50:5000/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ identifier, password, userType }),

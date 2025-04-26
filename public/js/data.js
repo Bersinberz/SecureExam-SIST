@@ -319,7 +319,7 @@ async function finishExam() {
     console.log(section);
 
     try {
-      const response = await fetch("http://10.128.0.50:80/api/exam/finish", {
+      const response = await fetch("http://10.128.0.50:5000/api/exam/finish", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
