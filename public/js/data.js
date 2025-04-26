@@ -65,7 +65,7 @@ async function fetchStudentDetails() {
   try {
     showLoader();
     const response = await fetch(
-      `http://10.128.0.30:5000/api/students?department=${department}&section=${section}`
+      `http://13.49.46.147:5000/api/students?department=${department}&section=${section}`
     );
     let students = await response.json();
     hideLoader();
@@ -89,7 +89,7 @@ async function fetchStudentDetails() {
 // Fetch and update code submissions
 async function fetchCodeSubmissions() {
   try {
-    const response = await fetch("http://10.128.0.30:5000/api/all-codes");
+    const response = await fetch("http://13.49.46.147:5000/api/all-codes");
     let submissions = await response.json();
 
     if (!response.ok) return;
@@ -319,7 +319,7 @@ async function finishExam() {
     console.log(section);
 
     try {
-      const response = await fetch("http://10.128.0.30:5000/api/exam/finish", {
+      const response = await fetch("http://13.49.46.147:5000/api/exam/finish", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
