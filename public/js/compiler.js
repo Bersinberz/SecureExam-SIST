@@ -428,7 +428,7 @@ async function handlePipCommand(command) {
         const controller = new AbortController();
         currentProcess = controller;
         
-        const response = await fetch("http://10.128.0.50:3000/run-code", {
+        const response = await fetch("http://10.128.0.30:5000/run-code", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
@@ -468,7 +468,7 @@ async function runCodeInTerminal() {
         currentProcess = controller;
         
         // First execution to detect if input is needed
-        const response = await fetch("http://10.128.0.50:3000/run-code", {
+        const response = await fetch("http://10.128.0.30:5000/run-code", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ language, code }),
@@ -496,7 +496,7 @@ async function runCodeInTerminal() {
                 if (userInput === null) return; // User cancelled
                 
                 // Send input to server
-                const inputResponse = await fetch("http://10.128.0.50:3000/run-code", {
+                const inputResponse = await fetch("http://10.128.0.30:5000/run-code", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ 
