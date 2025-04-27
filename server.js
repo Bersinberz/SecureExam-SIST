@@ -172,7 +172,7 @@ app.post("/login", async (req, res) => {
 });
 
 // Fetch Exam Details for Student
-app.get("/api/exam/get", async (req, res) => {
+app.get("/exam/get", async (req, res) => {
   try {
     const { registerNumber } = req.query;
     if (!registerNumber)
@@ -238,7 +238,7 @@ const parseCSV = (buffer) => {
   });
 };
 
-app.post("/api/exam/start", upload.single("file"), async (req, res) => {
+app.post("/exam/start", upload.single("file"), async (req, res) => {
   const { name, time, department, section } = req.body;
   const file = req.file;
 
@@ -328,7 +328,7 @@ app.post("/api/exam/start", upload.single("file"), async (req, res) => {
 });
 
 // Finish Exam
-app.post('/api/exam/finish', async (req, res) => {
+app.post('/exam/finish', async (req, res) => {
   const { department, section } = req.body;
 
   if (!department || !section) {
@@ -359,7 +359,7 @@ app.post('/api/exam/finish', async (req, res) => {
 });
 
 
-app.get("/api/students", async (req, res) => {
+app.get("/students", async (req, res) => {
   try {
     const { department, section } = req.query;
 
@@ -380,7 +380,7 @@ app.get("/api/students", async (req, res) => {
 });
 
 // geting student code
-app.post('/api/code/submit', async (req, res) => {
+app.post('/code/submit', async (req, res) => {
   try {
     let { registerNumber, language, code, assignedQuestion } = req.body;
 
@@ -427,7 +427,7 @@ const codeSchema = new mongoose.Schema({
 const Code = mongoose.model("Code", codeSchema, "code");
 
 // Fetch all code submissions
-app.get("/api/all-codes", async (req, res) => {
+app.get("/all-codes", async (req, res) => {
   try {
 
     const codeDocuments = await Code.find({});

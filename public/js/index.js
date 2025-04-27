@@ -102,7 +102,7 @@ loginForm.addEventListener("submit", async (event) => {
     loadingSpinner.style.display = "flex";
 
     try {
-        const response = await fetch("http://13.49.46.147:5000/login", {
+        const response = await fetch("https://securexam.in/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ identifier, password, userType }),

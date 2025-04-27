@@ -144,7 +144,7 @@ startButton.addEventListener("click", () => {
         formData.append("file", fileUploadInput.files[0]);
     }
 
-    fetch("http://13.49.46.147:5000/api/exam/start", {
+    fetch("https://securexam.in/exam/start", {
         method: "POST",
         body: formData,
     })
