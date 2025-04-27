@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
         const response = await fetch(
-            `http://13.49.46.147:5000/exam/get?registerNumber=${registerNumber}`
+            `https://securexam.in/exam/get?registerNumber=${registerNumber}`
         );
         const data = await response.json();
 
@@ -108,7 +108,7 @@ runButton.addEventListener("click", async () => {
     outputContent.textContent = "Running...";
 
     try {
-        const response = await fetch("https://securexam.in/run-code", {
+        const response = await fetch("https://securexam.in/api/run-code", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ language, code }),
