@@ -29,7 +29,7 @@ const runPython = (code) => {
         const filePath = path.join(CODE_DIR, "script.py");
         fs.writeFileSync(filePath, code);
 
-        exec(`python "${filePath}"`, { timeout: 5000 }, (error, stdout, stderr) => {
+        exec(`python3 "${filePath}"`, { timeout: 5000 }, (error, stdout, stderr) => {
             resolve(stdout.trim() || stderr.trim() || error?.message);
         });
     });
