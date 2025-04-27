@@ -270,19 +270,12 @@ app.post("/exam/start", upload.single("file"), async (req, res) => {
         const stream = buffer.toString("utf-8").trim().split("\n");
 
         for (let i = 0; i < stream.length; i++) {
-          const row = stream[i]
-            .split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/)
-            .map((col) => col.trim());
+          const row = stream[i].trim(); // We just use the row itself
 
-          if (row.length >= 1 && row[0]) {
+          if (row.length > 0) {
             results.push({
-              question: row[0],
-              nextQuestion:
-                i + 1 < stream.length
-                  ? stream[i + 1]
-                    .split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/)[0]
-                    .trim()
-                  : null,
+              question: row,
+              nextQuestion: i + 1 < stream.length ? stream[i + 1].trim() : null,
             });
           }
         }
@@ -303,6 +296,7 @@ app.post("/exam/start", upload.single("file"), async (req, res) => {
         .json({ message: "No valid questions found in the file" });
     }
 
+    // Prepare documents to be inserted into the database
     let questionDocs = questions.map((q) => ({
       examName: name,
       department,
