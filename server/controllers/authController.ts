@@ -4,18 +4,44 @@ import { Question } from "../models/QuestionModel";
 import { createToken } from "../utils/jwt";
 import { Student } from "../models/UserModel";
 import { Staff } from "../models/StaffModel";
+import bcrypt from "bcryptjs";
 
-// Login controller
+// ------------------ LOGIN CONTROLLER ------------------
 export const login = async (req: Request, res: Response): Promise<void> => {
-  const { identifier, password, userType } = req.body;
-
   try {
+    let { identifier, password, userType } = req.body;
+
+    // ---------- BASIC SANITIZATION ----------
+    if (typeof identifier === "string") identifier = identifier.trim();
+    if (typeof password === "string") password = password.trim();
+    if (typeof userType === "string") userType = userType.trim().toLowerCase();
+
+    // ---------- CORE VALIDATION ----------
+    if (!identifier || !password || !userType) {
+      res.status(400).json({ message: "All fields are required!" });
+      return;
+    }
+
+    if (typeof identifier !== "string" || typeof password !== "string" || typeof userType !== "string") {
+      res.status(400).json({ message: "Invalid data format!" });
+      return;
+    }
+
+    if (!["student", "staff"].includes(userType)) {
+      res.status(400).json({ message: "Invalid user type! Must be student or staff." });
+      return;
+    }
+
+    if (password.length < 6) {
+      res.status(400).json({ message: "Password must be at least 6 characters long!" });
+      return;
+    }
+
+    // ---------- ROUTE HANDLING ----------
     if (userType === "student") {
       await handleStudentLogin(identifier, password, res);
-    } else if (userType === "staff") {
-      await handleStaffLogin(identifier, password, res);
     } else {
-      res.status(400).json({ message: "Invalid user type!" });
+      await handleStaffLogin(identifier, password, res);
     }
   } catch (error) {
     console.error("Login error:", error);
@@ -23,28 +49,52 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-// Handle student login
+// ------------------ STUDENT LOGIN ------------------
 const handleStudentLogin = async (identifier: string, password: string, res: Response) => {
+  // Ensure identifier is numeric register number
   const registerNumber = parseInt(identifier, 10);
-  const student = await Student.findOne({ registerNumber });
+  if (isNaN(registerNumber)) {
+    res.status(400).json({ message: "Register number must be numeric!" });
+    return;
+  }
 
-  if (!student || password !== student.password) {
+  const student = await Student.findOne({ registerNumber });
+  if (!student) {
+    res.status(401).json({ message: "Student not found!" });
+    return;
+  }
+
+  // Compare hashed passwords
+  const isMatch = await bcrypt.compare(password, student.password);
+  if (!isMatch) {
     res.status(401).json({ message: "Invalid Credentials!" });
     return;
   }
 
+  // Validate department & section
+  if (!student.department || !student.section) {
+    res.status(400).json({ message: "Student profile incomplete!" });
+    return;
+  }
+
   const exams = await Exam.find({ department: student.department, section: student.section });
-  if (!exams.length) return res.status(404).json({ message: "No exams found" });
+  if (!exams.length) {
+    res.status(404).json({ message: "No exams found" });
+    return;
+  }
 
   const questions = await Question.find({ department: student.department, section: student.section });
-  if (!questions.length) return res.status(404).json({ message: "No questions found" });
+  if (!questions.length) {
+    res.status(404).json({ message: "No questions found" });
+    return;
+  }
 
+  // Assign random question
   const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
-
   await Student.updateOne({ registerNumber }, { $set: { assignedQuestion: randomQuestion.question } });
   await Question.deleteOne({ _id: randomQuestion._id });
 
-  // Generate JWT using centralized utility
+  // Generate JWT
   const token = createToken({
     userId: student._id.toString(),
     userType: "student",
@@ -60,16 +110,26 @@ const handleStudentLogin = async (identifier: string, password: string, res: Res
   });
 };
 
-// Handle staff login
+// ------------------ STAFF LOGIN ------------------
 const handleStaffLogin = async (email: string, password: string, res: Response) => {
-  const staff = await Staff.findOne({ email });
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    res.status(400).json({ message: "Invalid email format!" });
+    return;
+  }
 
-  if (!staff || password !== staff.password) {
+  const staff = await Staff.findOne({ email });
+  if (!staff) {
+    res.status(401).json({ message: "Staff not found!" });
+    return;
+  }
+
+  const isMatch = await bcrypt.compare(password, staff.password);
+  if (!isMatch) {
     res.status(401).json({ message: "Invalid Credentials!" });
     return;
   }
 
-  // Generate JWT using centralized utility
   const token = createToken({
     userId: staff._id.toString(),
     userType: "staff",

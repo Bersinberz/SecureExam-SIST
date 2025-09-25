@@ -3,7 +3,7 @@ import axios from "./axiosInstance";
 export interface LoginData {
   identifier: string;
   password: string;
-  userType: "student" | "staff";
+  userType: "student" | "staff" | "";
 }
 
 export interface LoginResponse {
@@ -12,7 +12,7 @@ export interface LoginResponse {
 }
 
 export const login = async (data: LoginData): Promise<LoginResponse> => {
-  const response = await axios.post("/auth/login", data, { withCredentials: true });
+  const response = await axios.post("/auth/login", data);
   const token = response.data.token;
   localStorage.setItem("jwtToken", token);
   return response.data;
