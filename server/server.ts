@@ -1,9 +1,8 @@
 require("dotenv").config();
 import express from "express";
 import cors from "cors";
-import path from "path";
 import { connectMongoose } from "./config/database";
-import { globalLimiter } from "./middleware/rateLimit";
+import { requestQueue } from "./middleware/requestQueue";
 
 // Import routes
 import authRoutes from "./routes/authRoutes";
@@ -20,7 +19,7 @@ app.use(
   cors({
     origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true, // <-- allows cookies or Authorization headers
+    credentials: true,
   })
 );
 
@@ -29,7 +28,8 @@ app.use(
 // --------------------
 app.use(express.json());
 app.use(express.static("public"));
-app.use(globalLimiter);
+
+app.use(requestQueue);
 
 // --------------------
 // Routes

@@ -11,7 +11,7 @@ interface JwtPayload {
 }
 
 export const createToken = (payload: JwtPayload, expiresIn: string = "1h"): string => {
-  const expires = ms(expiresIn as ms.StringValue); // cast string to ms.StringValue
-  const options: SignOptions = { expiresIn: (expires! / 1000) as number }; // convert ms -> seconds
+  const expires = ms(expiresIn as ms.StringValue);
+  const options: SignOptions = { expiresIn: (expires! / 1000) as number };
   return jwt.sign(payload, JWT_SECRET as jwt.Secret, options);
 };

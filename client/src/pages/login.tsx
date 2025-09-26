@@ -36,8 +36,8 @@ interface ValidationRules {
 const Login: React.FC = () => {
   const [userType, setUserType] = useState<UserType>("");
   const [registerNumber, setRegisterNumber] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("staff@gmail.com");
+  const [password, setPassword] = useState("Staff@123");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [countdown, setCountdown] = useState(15);
@@ -75,13 +75,13 @@ const Login: React.FC = () => {
 
   const handleMessageHide = () => setShowMessage(false);
 
-  const clearInputs = () => {
-    setRegisterNumber("");
-    setEmail("");
-    setPassword("");
-    setValidationErrors({});
-    setTouchedFields(new Set());
-  };
+  // const clearInputs = () => {
+  //   setRegisterNumber("");
+  //   setEmail("");
+  //   setPassword("");
+  //   setValidationErrors({});
+  //   setTouchedFields(new Set());
+  // };
 
   const markFieldAsTouched = (fieldName: string) => {
     setTouchedFields(prev => new Set(prev).add(fieldName));
@@ -250,7 +250,7 @@ const Login: React.FC = () => {
       } else {
         displayMessage(response.message || "Login successful!", "success");
         setTimeout(() => {
-          window.location.href = "../html/dashboard.html";
+          // window.location.href = "../html/dashboard.html";
         }, 2000);
       }
     } catch (error: any) {

@@ -4,7 +4,6 @@ import { Question } from "../models/QuestionModel";
 import { createToken } from "../utils/jwt";
 import { Student } from "../models/UserModel";
 import { Staff } from "../models/StaffModel";
-import bcrypt from "bcryptjs";
 
 // ------------------ LOGIN CONTROLLER ------------------
 export const login = async (req: Request, res: Response): Promise<void> => {
@@ -64,9 +63,8 @@ const handleStudentLogin = async (identifier: string, password: string, res: Res
     return;
   }
 
-  // Compare hashed passwords
-  const isMatch = await bcrypt.compare(password, student.password);
-  if (!isMatch) {
+  // Compare plain-text password
+  if (student.password !== password) {
     res.status(401).json({ message: "Invalid Credentials!" });
     return;
   }
@@ -124,8 +122,7 @@ const handleStaffLogin = async (email: string, password: string, res: Response) 
     return;
   }
 
-  const isMatch = await bcrypt.compare(password, staff.password);
-  if (!isMatch) {
+  if (staff.password !== password) {
     res.status(401).json({ message: "Invalid Credentials!" });
     return;
   }
