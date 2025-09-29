@@ -1,4 +1,6 @@
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import cors from "cors";
 import { connectMongoose } from "./config/database";
@@ -10,11 +12,20 @@ import examRoutes from "./routes/examRoutes";
 import studentRoutes from "./routes/studentRoutes";
 import codeRoutes from "./routes/codeRoutes";
 
-const app = express();
+// --------------------
+// Environment Variables
+// --------------------
+const PORT = Number(process.env.PORT);
+if (!process.env.MONGO_URI) {
+  throw new Error("Missing MONGO_URI environment variable");
+}
 
 // --------------------
-// CORS Configuration
+// Express app setup
 // --------------------
+const app = express();
+
+// CORS
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -23,56 +34,36 @@ app.use(
   })
 );
 
-// --------------------
 // Middleware
-// --------------------
 app.use(express.json());
 app.use(express.static("public"));
-
 app.use(requestQueue);
 
-// --------------------
 // Routes
-// --------------------
 app.use("/api/auth", authRoutes);
 app.use("/api/exam", examRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/code", codeRoutes);
 
-// --------------------
 // Health check
-// --------------------
 app.get("/health", (req, res) => {
   res.status(200).json({ message: "Server is running!" });
 });
 
-// --------------------
-// Error handling middleware
-// --------------------
+// Error handling
 app.use(
-  (
-    err: any,
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
-  ) => {
+  (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     console.error(err.stack);
     res.status(500).json({ message: "Something went wrong!" });
   }
 );
 
-// --------------------
-// 404 handler (Express 5 safe)
-// --------------------
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
 
-// --------------------
 // Start server
-// --------------------
-const PORT = parseInt(process.env.PORT || "5000", 10);
-
 const startServer = async () => {
   try {
     await connectMongoose();

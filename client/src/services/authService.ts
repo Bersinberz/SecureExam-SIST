@@ -1,3 +1,4 @@
+import { storeToken } from "../utils/tokenHelper";
 import axios from "./axiosInstance";
 
 export interface LoginData {
@@ -8,18 +9,28 @@ export interface LoginData {
 
 export interface LoginResponse {
   token: string;
+  userType?: "student" | "staff";
+  registerNumber?: string;
   message?: string;
+  exams?: any[];
+  assignedQuestion?: string;
 }
 
 export const login = async (data: LoginData): Promise<LoginResponse> => {
-  const response = await axios.post("/auth/login", data);
-  const token = response.data.token;
-  localStorage.setItem("jwtToken", token);
-  return response.data;
-};
+  try {
+    const response = await axios.post("/auth/login", data);
+    const token = response.data.data?.token;
 
-export const getToken = (): string | null => localStorage.getItem("jwtToken");
+    if (!token) {
+      console.warn("Token not found in response:", response.data);
+      return { token: "" };
+    }
 
-export const logout = () => {
-  localStorage.removeItem("jwtToken");
+    storeToken(token);
+
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Login error:", error.response?.data || error.message);
+    throw error;
+  }
 };
