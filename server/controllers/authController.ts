@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Exam } from "../models/ExamModel";
+import { ExamModel } from "../models/ExamModel";
 import { Question } from "../models/QuestionModel";
 import { createToken } from "../utils/jwt";
 import { Student } from "../models/UserModel";
@@ -113,7 +113,7 @@ const handleStudentLogin = async (identifier: string, password: string, res: Res
     }
 
     // Check for available exams
-    const exams = await Exam.find({ 
+    const exams = await ExamModel.find({ 
       department: student.department, 
       section: student.section 
     });
