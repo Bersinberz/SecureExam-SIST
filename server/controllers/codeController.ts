@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Code } from '../models/CodeModel';
+import { Code } from '../models/codeModel';
 
 export const submitCode = async (req: Request, res: Response): Promise<void> => {
   try {

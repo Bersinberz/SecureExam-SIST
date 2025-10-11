@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
-// import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Message from "../components/Message.tsx";
 import Footer from '../components/Footer';
 import Header from '../components/Header.tsx';
-import Loader from '../components/Loader.tsx';  
+import Loader from '../components/Loader.tsx';
 import { createExam } from '../services/examService';
 
 interface ExamDetails {
@@ -22,8 +22,17 @@ interface MessageState {
     position?: "top-right" | "top-left" | "bottom-right" | "bottom-left" | "center";
 }
 
+interface ValidationErrors {
+    name?: string;
+    time?: string;
+    department?: string;
+    section?: string;
+    year?: string;
+    file?: string;
+}
+
 const ExamSchedule: React.FC = () => {
-    // const navigate = useNavigate();
+    const navigate = useNavigate();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [examDetails, setExamDetails] = useState<ExamDetails>({
@@ -40,6 +49,7 @@ const ExamSchedule: React.FC = () => {
     const [messages, setMessages] = useState<MessageState[]>([]);
     const [hovered, setHovered] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
     const hours = Array.from({ length: 6 }, (_, i) => i);
     const minutes = [0, 15, 30, 45];
@@ -82,17 +92,106 @@ const ExamSchedule: React.FC = () => {
         setMessages(prev => prev.filter(message => message.id !== id));
     };
 
+    // Core input validation function
+    const validateInputs = (): boolean => {
+        const errors: ValidationErrors = {};
+
+        // Exam name validation
+        if (!examDetails.name.trim()) {
+            errors.name = 'Exam name is required';
+        } else if (examDetails.name.trim().length < 2) {
+            errors.name = 'Exam name must be at least 2 characters long';
+        } else if (examDetails.name.trim().length > 100) {
+            errors.name = 'Exam name must be less than 100 characters';
+        }
+
+        // Time validation
+        if (examDetails.time <= 0) {
+            errors.time = 'Exam time must be greater than 0';
+        } else if (examDetails.time > 360) { // 6 hours max
+            errors.time = 'Exam time cannot exceed 6 hours';
+        }
+
+        // Department validation
+        if (!examDetails.department) {
+            errors.department = 'Department is required';
+        } else if (!departments.some(dept => dept.value === examDetails.department)) {
+            errors.department = 'Please select a valid department';
+        }
+
+        // Section validation
+        if (!examDetails.section) {
+            errors.section = 'Class is required';
+        } else if (!sections.some(sec => sec.value === examDetails.section)) {
+            errors.section = 'Please select a valid class';
+        }
+
+        // Year validation
+        if (!examDetails.year) {
+            errors.year = 'Year is required';
+        } else if (!years.some(y => y.value === examDetails.year)) {
+            errors.year = 'Please select a valid year';
+        }
+
+        // File validation
+        if (!selectedFile) {
+            errors.file = 'Question file is required';
+        } else {
+            // File type validation
+            if (!selectedFile.name.toLowerCase().endsWith('.csv')) {
+                errors.file = 'Only CSV files are allowed';
+            }
+
+            // File size validation (5MB max)
+            if (selectedFile.size > 5 * 1024 * 1024) {
+                errors.file = 'File size must be less than 5MB';
+            }
+
+            // File name validation
+            if (selectedFile.name.length > 255) {
+                errors.file = 'File name is too long';
+            }
+        }
+
+        setValidationErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
     const handleInputChange = (field: keyof ExamDetails, value: string | number) => {
         setExamDetails(prev => ({ ...prev, [field]: value }));
+
+        // Clear validation error when user starts typing
+        if (validationErrors[field as keyof ValidationErrors]) {
+            setValidationErrors(prev => ({
+                ...prev,
+                [field]: undefined
+            }));
+        }
     };
 
     const handleFileUpload = (files: FileList | null) => {
         if (files && files.length > 0) {
             const file = files[0];
 
+            // Clear previous file validation error
+            setValidationErrors(prev => ({
+                ...prev,
+                file: undefined
+            }));
+
             // Check if file is CSV
             if (!file.name.toLowerCase().endsWith('.csv')) {
-                showMessage('Please upload a CSV file only', 'error');
+                const errorMsg = 'Please upload a CSV file only';
+                setValidationErrors(prev => ({ ...prev, file: errorMsg }));
+                showMessage(errorMsg, 'error');
+                return;
+            }
+
+            // Check file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                const errorMsg = 'File size must be less than 5MB';
+                setValidationErrors(prev => ({ ...prev, file: errorMsg }));
+                showMessage(errorMsg, 'error');
                 return;
             }
 
@@ -131,65 +230,70 @@ const ExamSchedule: React.FC = () => {
             fileInputRef.current.value = '';
         }
         setShowDeleteConfirm(false);
-        showMessage('File removed', 'error');
+        setValidationErrors(prev => ({ ...prev, file: undefined }));
+        showMessage('File removed', 'info');
     };
 
-
-const startExam = async () => {
-    const { name, department, section, year, time } = examDetails;
-
-    if (!name || !department || !section || !year || !time) {
-        showMessage('Please fill all fields', 'error');
-        return;
-    }
-
-    if (!selectedFile) {
-        showMessage('Please upload a question file', 'error');
-        return;
-    }
-
-    setIsStartingExam(true);
-
-    try {
-        // Use the service to create exam
-        const result = await createExam(examDetails, selectedFile);
-
-        setIsStartingExam(false);
-
-        if (result.message.includes('successfully')) {
-            showMessage('Exam started successfully!', 'success');
-            setTimeout(() => {
-                // navigate(`/data?department=${department}&section=${section}`);
-            }, 2000);
-        } else {
-            showMessage(result.message, 'error');
+    const startExam = async () => {
+        // Validate all inputs before proceeding
+        if (!validateInputs()) {
+            showMessage('Please fix the validation errors before starting the exam', 'error');
+            return;
         }
-    } catch (error: any) {
-        setIsStartingExam(false);
-        console.error('Error:', error);
 
-        if (error.response?.status === 401) {
-            showMessage('Authentication failed. Please login again.', 'error');
-            // Optionally redirect to login page
-            // navigate('/login');
-        } else {
-            showMessage(error.message || 'Failed to start exam. Please try again.', 'error');
+        setIsStartingExam(true);
+
+        try {
+            // Use the service to create exam
+            const result = await createExam(examDetails, selectedFile!);
+
+            setIsStartingExam(false);
+
+            if (result.message.includes('successfully')) {
+                showMessage('Exam started successfully!', 'success');
+                navigate('/exam-students', {
+                    state: {
+                        department: examDetails.department,
+                        section: examDetails.section,
+                        year: examDetails.year
+                    }
+                });
+            } else {
+                showMessage(result.message, 'error');
+            }
+        } catch (error: any) {
+            setIsStartingExam(false);
+            console.error('Error:', error);
+
+            if (error.response?.status === 401) {
+                showMessage('Authentication failed. Please login again.', 'error');
+                navigate('/login');
+            } else if (error.response?.status === 400) {
+                showMessage('Invalid exam data. Please check your inputs.', 'error');
+            } else if (error.response?.status === 413) {
+                showMessage('File too large. Please upload a smaller file.', 'error');
+            } else {
+                showMessage(error.message || 'Failed to start exam. Please try again.', 'error');
+            }
         }
-    }
-};
+    };
 
     // Updated Styles to match Login.tsx exactly
     const examDetailsStyles = {
         sectionTitle: { color: '#831238', marginBottom: '20px', fontSize: '1.4rem', fontWeight: 'bold' as 'bold' },
         label: { display: 'block', margin: '10px 0 5px', fontWeight: 'bold' as 'bold', color: '#555' },
         input: { width: '100%', padding: '12px', margin: '0.5rem 0', border: '1px solid #ccc', borderRadius: '10px', fontSize: '1rem', backgroundColor: 'white' },
+        inputError: { border: '1px solid #dc3545' },
         timePicker: { display: 'flex', justifyContent: 'space-between', width: '100%', marginTop: '10px' },
         timeSelect: { width: '48%', padding: '12px', border: '1px solid #ddd', borderRadius: '10px', fontSize: '1rem', backgroundColor: 'white' },
+        timeSelectError: { border: '1px solid #dc3545' },
         dropdownContainer: { display: 'flex', gap: '20px', justifyContent: 'space-between', marginTop: '10px' },
         dropdownGroup: { width: '48%' },
         dropdownSelect: { width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '10px', fontSize: '1rem', backgroundColor: 'white' },
+        dropdownSelectError: { border: '1px solid #dc3545' },
         threeColumnContainer: { display: 'flex', gap: '20px', justifyContent: 'space-between', marginTop: '10px' },
-        threeColumnGroup: { width: '32%' }
+        threeColumnGroup: { width: '32%' },
+        errorText: { color: '#dc3545', fontSize: '0.875rem', marginTop: '5px', display: 'block' }
     };
 
     const questionsStyles = {
@@ -197,6 +301,7 @@ const startExam = async () => {
         removeButton: { backgroundColor: '#831238', color: 'white', border: 'none', padding: '10px 20px', fontSize: '16px', borderRadius: '10px', transition: 'background-color 0.3s ease', cursor: 'pointer', marginTop: '10px' },
         dropContainer: { backgroundColor: '#fff', position: 'relative', display: 'flex', gap: '10px', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '40px 20px', marginTop: '1.1875rem', borderRadius: '15px', border: '2px dashed #ccc', color: '#444', cursor: 'pointer', transition: 'all 0.3s ease-in-out', minHeight: '200px' },
         dropContainerHover: { background: 'rgba(131, 18, 56, 0.05)', borderColor: '#831238', boxShadow: '0 4px 12px rgba(131, 18, 56, 0.1)' },
+        dropContainerError: { border: '2px dashed #dc3545', background: 'rgba(220, 53, 69, 0.05)' },
         dropTitle: { color: '#666', fontSize: '18px', fontWeight: '600', textAlign: 'center', marginBottom: '5px' },
         dropTitleHover: { color: '#831238' },
         clickToUpload: { color: '#831238', fontWeight: 'bold' },
@@ -214,12 +319,11 @@ const startExam = async () => {
     };
 
     const commonStyles = {
-        mainContainer: { background: "white", marginTop: "100px", borderRadius: "20px", boxShadow: "0 4px 8px rgba(0,0,0,0.1)", padding: "2rem", maxWidth: "1600px", marginLeft: "auto", marginRight: "auto" },
+        mainContainer: { background: "white", marginTop: "60px", borderRadius: "20px", boxShadow: "0 4px 8px rgba(0,0,0,0.1)", padding: "2rem", maxWidth: "1600px", marginLeft: "auto", marginRight: "auto" },
         pageTitle: { color: '#831238', marginBottom: '20px', textAlign: 'center' as 'center', fontSize: '1.8rem', fontWeight: 'bold' },
         startButton: { backgroundColor: hovered ? "#9e1c3f" : "#831238", color: 'white', padding: '15px 40px', border: 'none', borderRadius: '10px', fontSize: '1.2em', fontWeight: 'bold', transition: 'all 0.3s', cursor: 'pointer', marginTop: '30px', width: '200px' },
         buttonDisabled: { backgroundColor: '#cccccc', cursor: 'not-allowed' }
     };
-
 
     const isFormValid = examDetails.name && examDetails.department &&
         examDetails.section && examDetails.year && examDetails.time > 0 && selectedFile;
@@ -229,7 +333,7 @@ const startExam = async () => {
             {/* Header */}
             <Header />
 
-            {/* Loader Component */}
+            {/* Loader Component - Only using imported Loader */}
             {(isUploading || isStartingExam) && <Loader size={50} color="#831238" overlay={true} />}
 
             {/* Message Components */}
@@ -295,10 +399,16 @@ const startExam = async () => {
                                             className="form-control"
                                             value={examDetails.name}
                                             onChange={(e) => handleInputChange('name', e.target.value)}
-                                            style={examDetailsStyles.input}
+                                            style={{
+                                                ...examDetailsStyles.input,
+                                                ...(validationErrors.name ? examDetailsStyles.inputError : {})
+                                            }}
                                             placeholder="Enter exam name"
                                             required
                                         />
+                                        {validationErrors.name && (
+                                            <span style={examDetailsStyles.errorText}>{validationErrors.name}</span>
+                                        )}
                                     </div>
 
                                     <div className="mb-3">
@@ -316,7 +426,10 @@ const startExam = async () => {
                                                         const minutes = examDetails.time % 60;
                                                         handleInputChange('time', hours * 60 + minutes);
                                                     }}
-                                                    style={examDetailsStyles.timeSelect}
+                                                    style={{
+                                                        ...examDetailsStyles.timeSelect,
+                                                        ...(validationErrors.time ? examDetailsStyles.timeSelectError : {})
+                                                    }}
                                                 >
                                                     <option value="" disabled>Select hours</option>
                                                     {hours.map(hour => (
@@ -336,7 +449,10 @@ const startExam = async () => {
                                                         const hours = Math.floor(examDetails.time / 60);
                                                         handleInputChange('time', hours * 60 + minutes);
                                                     }}
-                                                    style={examDetailsStyles.timeSelect}
+                                                    style={{
+                                                        ...examDetailsStyles.timeSelect,
+                                                        ...(validationErrors.time ? examDetailsStyles.timeSelectError : {})
+                                                    }}
                                                 >
                                                     <option value="" disabled>Select minutes</option>
                                                     {minutes.map(minute => (
@@ -347,6 +463,9 @@ const startExam = async () => {
                                                 </select>
                                             </div>
                                         </div>
+                                        {validationErrors.time && (
+                                            <span style={examDetailsStyles.errorText}>{validationErrors.time}</span>
+                                        )}
                                     </div>
 
                                     <div className="mb-3">
@@ -359,7 +478,10 @@ const startExam = async () => {
                                                     className="form-select"
                                                     value={examDetails.year}
                                                     onChange={(e) => handleInputChange('year', e.target.value)}
-                                                    style={examDetailsStyles.dropdownSelect}
+                                                    style={{
+                                                        ...examDetailsStyles.dropdownSelect,
+                                                        ...(validationErrors.year ? examDetailsStyles.dropdownSelectError : {})
+                                                    }}
                                                     required
                                                 >
                                                     <option value="" disabled>Select year</option>
@@ -369,6 +491,9 @@ const startExam = async () => {
                                                         </option>
                                                     ))}
                                                 </select>
+                                                {validationErrors.year && (
+                                                    <span style={examDetailsStyles.errorText}>{validationErrors.year}</span>
+                                                )}
                                             </div>
                                             <div style={examDetailsStyles.threeColumnGroup}>
                                                 <label className="form-label" style={examDetailsStyles.label}>
@@ -378,7 +503,10 @@ const startExam = async () => {
                                                     className="form-select"
                                                     value={examDetails.department}
                                                     onChange={(e) => handleInputChange('department', e.target.value)}
-                                                    style={examDetailsStyles.dropdownSelect}
+                                                    style={{
+                                                        ...examDetailsStyles.dropdownSelect,
+                                                        ...(validationErrors.department ? examDetailsStyles.dropdownSelectError : {})
+                                                    }}
                                                     required
                                                 >
                                                     <option value="" disabled>Select department</option>
@@ -388,6 +516,9 @@ const startExam = async () => {
                                                         </option>
                                                     ))}
                                                 </select>
+                                                {validationErrors.department && (
+                                                    <span style={examDetailsStyles.errorText}>{validationErrors.department}</span>
+                                                )}
                                             </div>
                                             <div style={examDetailsStyles.threeColumnGroup}>
                                                 <label className="form-label" style={examDetailsStyles.label}>
@@ -397,7 +528,10 @@ const startExam = async () => {
                                                     className="form-select"
                                                     value={examDetails.section}
                                                     onChange={(e) => handleInputChange('section', e.target.value)}
-                                                    style={examDetailsStyles.dropdownSelect}
+                                                    style={{
+                                                        ...examDetailsStyles.dropdownSelect,
+                                                        ...(validationErrors.section ? examDetailsStyles.dropdownSelectError : {})
+                                                    }}
                                                     required
                                                 >
                                                     <option value="" disabled>Select class</option>
@@ -407,6 +541,9 @@ const startExam = async () => {
                                                         </option>
                                                     ))}
                                                 </select>
+                                                {validationErrors.section && (
+                                                    <span style={examDetailsStyles.errorText}>{validationErrors.section}</span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -420,7 +557,7 @@ const startExam = async () => {
                                 <h3 style={questionsStyles.sectionTitle}>Questions</h3>
                                 <form>
                                     <div
-                                        className={`drop-container rounded text-center ${isDragOver ? 'drag-over' : ''} ${selectedFile ? 'success' : ''}`}
+                                        className={`drop-container rounded text-center ${isDragOver ? 'drag-over' : ''} ${selectedFile ? 'success' : ''} ${validationErrors.file ? 'error' : ''}`}
                                         onDragOver={handleDragOver}
                                         onDragLeave={handleDragLeave}
                                         onDrop={handleDrop}
@@ -428,7 +565,6 @@ const startExam = async () => {
                                     >
                                         {isUploading ? (
                                             <div className="text-center">
-                                                <div className="spinner-border text-primary mb-2" role="status"></div>
                                                 <p className="mb-0">Uploading...</p>
                                             </div>
                                         ) : selectedFile ? (
@@ -466,10 +602,13 @@ const startExam = async () => {
                                                     />
                                                     <span style={questionsStyles.clickToUpload}>click to upload</span>
                                                 </div>
-                                                <p className="text-muted mt-2">Supported format: CSV</p>
+                                                <p className="text-muted mt-2">Supported format: CSV (max 5MB)</p>
                                             </div>
                                         )}
                                     </div>
+                                    {validationErrors.file && (
+                                        <span style={examDetailsStyles.errorText}>{validationErrors.file}</span>
+                                    )}
                                 </form>
                             </div>
                         </div>

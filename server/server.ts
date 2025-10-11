@@ -9,6 +9,8 @@ import { requestQueue } from "./middleware/requestQueue";
 // Import routes
 import authRoutes from "./routes/authRoutes";
 import examRoutes from "./routes/examRoutes";
+import tableRoutes from "./routes/tableRoutes";
+
 import studentRoutes from "./routes/studentRoutes";
 import codeRoutes from "./routes/codeRoutes";
 
@@ -42,6 +44,8 @@ app.use(requestQueue);
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/exam", examRoutes);
+app.use("api/get", tableRoutes)
+
 app.use("/api/students", studentRoutes);
 app.use("/api/code", codeRoutes);
 
@@ -67,7 +71,7 @@ app.use((req, res) => {
 const startServer = async () => {
   try {
     await connectMongoose();
-    app.listen(PORT, "localhost", () => {
+    app.listen(PORT, () => {
       console.log(`🌍 Server is live at http://localhost:${PORT}`);
     });
   } catch (error) {

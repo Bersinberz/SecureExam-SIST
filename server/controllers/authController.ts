@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import { ExamModel } from "../models/ExamModel";
-import { Question } from "../models/QuestionModel";
-import { createToken } from "../utils/jwt";
-import { Student } from "../models/UserModel";
-import { Staff } from "../models/StaffModel";
+import { createToken } from "../utils/tokenUtils";
+import { Student } from "../models/studentModel";
+import { ExamModel } from "../models/examModel";
+import { Question } from "../models/questionModel";
+import { Staff } from "../models/staffModel";
 
 // ------------------ LOGIN CONTROLLER ------------------
 export const login = async (req: Request, res: Response): Promise<void> => {
@@ -184,27 +184,18 @@ const handleStaffLogin = async (email: string, password: string, res: Response) 
   try {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      res.status(400).json({ 
-        success: false,
-        message: "Invalid email format! Please enter a valid email address." 
-      });
+      res.status(400).json({ success: false, message: "Invalid email format! Please enter a valid email address." });
       return;
     }
 
     const staff = await Staff.findOne({ email: email.toLowerCase() });
     if (!staff) {
-      res.status(401).json({ 
-        success: false,
-        message: "Staff account not found! Please check your email." 
-      });
+      res.status(404).json({ success: false, message: "No data available for this staff account." });
       return;
     }
 
     if (staff.password !== password) {
-      res.status(401).json({ 
-        success: false,
-        message: "Invalid password! Please check your credentials." 
-      });
+      res.status(401).json({ success: false, message: "Invalid password! Please check your credentials." });
       return;
     }
 
@@ -223,11 +214,9 @@ const handleStaffLogin = async (email: string, password: string, res: Response) 
         email: staff.email
       }
     });
+
   } catch (error) {
     console.error("Staff login error:", error);
-    res.status(500).json({ 
-      success: false,
-      message: "Error during staff login. Please try again." 
-    });
+    res.status(500).json({ success: false, message: "Error during staff login. Please try again." });
   }
 };

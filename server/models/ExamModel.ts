@@ -7,6 +7,9 @@ export interface IExam extends Document {
   section: string;
   year: string;
   questions: string[];
+  createdBy: string;
+  createdAt: Date;
+  parseWarnings?: string[];
 }
 
 const ExamSchema = new Schema<IExam>({
@@ -15,7 +18,10 @@ const ExamSchema = new Schema<IExam>({
   department: { type: String, required: true },
   section: { type: String, required: true },
   year: { type: String, required: true },
-  questions: { type: [String], required: true }, // array of questions
+  questions: [{ type: String, required: true }],
+  createdBy: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+  parseWarnings: [{ type: String }]
 });
 
 export const ExamModel = mongoose.model<IExam>("Exam", ExamSchema);

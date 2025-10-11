@@ -1,11 +1,14 @@
+// controllers/examController.ts
 import { Request, Response } from "express";
 import fs from "fs";
 import path from "path";
 import csvParser from "csv-parser";
-import { ExamModel } from "../models/ExamModel";
+import { ExamModel } from "../models/examModel";
+import { getUserIdFromToken } from "../utils/tokenUtils";
 
 interface MulterRequest extends Request {
   file?: Express.Multer.File;
+  user?: any;
 }
 
 // Validation interfaces
@@ -16,6 +19,7 @@ interface CreateExamRequest {
   section: string;
   year: string;
   file?: Express.Multer.File;
+  userId?: string;
 }
 
 // Validation functions
@@ -29,17 +33,43 @@ const validateExamData = (data: Partial<CreateExamRequest>): { isValid: boolean;
   if (!data.section?.trim()) errors.push("Section is required");
   if (!data.year?.trim()) errors.push("Year is required");
   if (!data.file) errors.push("CSV file is required");
+  if (!data.userId?.trim()) errors.push("User authentication required");
 
   // Data type and format validation
+  if (data.name) {
+    const name = data.name.trim();
+    if (name.length < 2) errors.push("Exam name must be at least 2 characters long");
+    if (name.length > 100) errors.push("Exam name cannot exceed 100 characters");
+    if (!/^[a-zA-Z0-9\s\-_.,()&]+$/.test(name)) {
+      errors.push("Exam name can only contain letters, numbers, spaces, and basic punctuation");
+    }
+  }
+
   if (data.time) {
     const time = Number(data.time);
     if (isNaN(time) || time <= 0) errors.push("Exam time must be a positive number");
     if (time > 480) errors.push("Exam time cannot exceed 480 minutes (8 hours)");
+    if (time < 5) errors.push("Exam time must be at least 5 minutes");
+    if (!Number.isInteger(time)) errors.push("Exam time must be a whole number");
   }
 
-  if (data.name && data.name.length > 100) errors.push("Exam name cannot exceed 100 characters");
-  if (data.department && data.department.length > 50) errors.push("Department name cannot exceed 50 characters");
-  if (data.section && data.section.length > 10) errors.push("Section cannot exceed 10 characters");
+  if (data.department) {
+    const dept = data.department.trim();
+    if (dept.length < 2) errors.push("Department must be at least 2 characters long");
+    if (dept.length > 50) errors.push("Department name cannot exceed 50 characters");
+    if (!/^[A-Za-z0-9]+$/.test(dept)) {
+      errors.push("Department can only contain letters and numbers");
+    }
+  }
+
+  if (data.section) {
+    const sect = data.section.trim();
+    if (sect.length < 2) errors.push("Section must be at least 2 characters long");
+    if (sect.length > 10) errors.push("Section cannot exceed 10 characters");
+    if (!/^[A-Za-z0-9]+$/.test(sect)) {
+      errors.push("Section can only contain letters and numbers");
+    }
+  }
   
   // Updated year validation for academic years
   if (data.year) {
@@ -48,6 +78,14 @@ const validateExamData = (data: Partial<CreateExamRequest>): { isValid: boolean;
     
     if (!validYears.includes(normalizedYear)) {
       errors.push("Year must be a valid academic year (1st, 2nd, 3rd, or 4th year)");
+    }
+  }
+
+  // User ID validation
+  if (data.userId) {
+    if (data.userId.length < 10) errors.push("Invalid user ID format");
+    if (!/^[a-fA-F0-9]{24}$/.test(data.userId)) {
+      errors.push("Invalid user ID format");
     }
   }
 
@@ -63,8 +101,8 @@ const validateFile = (file: Express.Multer.File): { isValid: boolean; errors: st
   }
 
   // Check file type
-  const allowedMimeTypes = ['text/csv', 'application/vnd.ms-excel'];
-  if (!allowedMimeTypes.includes(file.mimetype)) {
+  const allowedMimeTypes = ['text/csv', 'application/vnd.ms-excel', 'application/csv'];
+  if (!allowedMimeTypes.includes(file.mimetype) && !file.originalname.toLowerCase().endsWith('.csv')) {
     errors.push("Only CSV files are allowed");
   }
 
@@ -74,10 +112,24 @@ const validateFile = (file: Express.Multer.File): { isValid: boolean; errors: st
     errors.push("File size cannot exceed 5MB");
   }
 
+  // Check file size (min 1 byte)
+  if (file.size === 0) {
+    errors.push("File cannot be empty");
+  }
+
   // Check file extension
   const fileExtension = path.extname(file.originalname).toLowerCase();
   if (fileExtension !== '.csv') {
     errors.push("File must have .csv extension");
+  }
+
+  // Check filename security
+  const fileName = file.originalname;
+  if (fileName.length > 255) {
+    errors.push("File name is too long");
+  }
+  if (/[<>:"/\\|?*]/.test(fileName)) {
+    errors.push("File name contains invalid characters");
   }
 
   return { isValid: errors.length === 0, errors };
@@ -94,6 +146,8 @@ const parseCSVFile = async (filePath: string): Promise<{ questions: string[]; er
     }
 
     let rowCount = 0;
+    let isEmptyFile = true;
+
     const stream = fs.createReadStream(filePath)
       .pipe(csvParser({ 
         headers: false,
@@ -101,6 +155,7 @@ const parseCSVFile = async (filePath: string): Promise<{ questions: string[]; er
       }))
       .on("data", (row) => {
         rowCount++;
+        isEmptyFile = false;
         const firstColumn = row[0];
         
         // Skip empty rows
@@ -111,16 +166,41 @@ const parseCSVFile = async (filePath: string): Promise<{ questions: string[]; er
         
         const question = firstColumn.trim();
         
-        // No length restriction for questions - accept any length
+        // Validate question content
+        if (question.length === 0) {
+          errors.push(`Row ${rowCount} contains an empty question`);
+          return;
+        }
+
+        if (question.length > 1000) {
+          errors.push(`Row ${rowCount} question is too long (max 1000 characters)`);
+          return;
+        }
+
+        // Check for potentially malicious content
+        if (/<script|javascript:|onload=|onerror=/i.test(question)) {
+          errors.push(`Row ${rowCount} contains potentially unsafe content`);
+          return;
+        }
+        
         questions.push(question);
       })
       .on("end", () => {
-        if (rowCount === 0) {
+        if (isEmptyFile || rowCount === 0) {
           errors.push("CSV file is empty");
         }
         if (questions.length === 0 && errors.length === 0) {
           errors.push("No valid questions found in CSV file");
         }
+        
+        // Validate question count
+        if (questions.length > 100) {
+          errors.push(`Too many questions (${questions.length}). Maximum allowed is 100.`);
+        }
+        if (questions.length < 1) {
+          errors.push("At least one valid question is required");
+        }
+
         resolve({ questions, errors });
       })
       .on("error", (error) => {
@@ -131,6 +211,15 @@ const parseCSVFile = async (filePath: string): Promise<{ questions: string[]; er
     stream.on("error", (error) => {
       reject(new Error(`Stream error: ${error.message}`));
     });
+
+    // Set timeout for CSV parsing (30 seconds)
+    const timeout = setTimeout(() => {
+      stream.destroy();
+      reject(new Error("CSV parsing timeout - file too large or complex"));
+    }, 30000);
+
+    stream.on("end", () => clearTimeout(timeout));
+    stream.on("error", () => clearTimeout(timeout));
   });
 };
 
@@ -187,6 +276,18 @@ export const createExam = async (req: MulterRequest, res: Response) => {
     const { name, time, department, section, year } = req.body;
     const file = req.file;
 
+    // Extract user ID from token using imported function
+    let userId: string;
+    try {
+      userId = getUserIdFromToken(req);
+    } catch (authError: any) {
+      console.error('Auth error details:', authError);
+      return res.status(401).json({
+        message: "Authentication failed",
+        error: authError.message
+      });
+    }
+
     // Prepare data for validation
     const examData: Partial<CreateExamRequest> = {
       name,
@@ -194,7 +295,8 @@ export const createExam = async (req: MulterRequest, res: Response) => {
       department,
       section,
       year,
-      file
+      file,
+      userId
     };
 
     // Validate input data
@@ -274,6 +376,8 @@ export const createExam = async (req: MulterRequest, res: Response) => {
       section: section.trim(),
       year: normalizedYear,
       questions,
+      createdBy: userId, // Add user ID from token
+      createdAt: new Date(),
       parseWarnings: parseErrors.length > 0 ? parseErrors : undefined
     });
 
@@ -283,18 +387,23 @@ export const createExam = async (req: MulterRequest, res: Response) => {
     await cleanupFile(filePath);
     tempFilePath = null;
 
+    // Type-safe access to exam properties
+    const examResponse = {
+      examName: exam.examName,
+      examTime: exam.examTime,
+      department: exam.department,
+      section: exam.section,
+      year: exam.year,
+      questionCount: exam.questions.length,
+      createdBy: (exam as any).createdBy,
+      createdAt: (exam as any).createdAt,
+      warnings: (exam as any).parseWarnings || undefined
+    };
+
     return res.status(201).json({
       message: "Exam created successfully!",
       examId: exam._id,
-      data: {
-        examName: exam.examName,
-        examTime: exam.examTime,
-        department: exam.department,
-        section: exam.section,
-        year: exam.year,
-        questionCount: exam.questions.length,
-        warnings: parseErrors.length > 0 ? parseErrors : undefined
-      },
+      data: examResponse,
     });
 
   } catch (error: any) {
@@ -322,6 +431,13 @@ export const createExam = async (req: MulterRequest, res: Response) => {
     if (error.message.includes('CSV') || error.message.includes('file')) {
       return res.status(400).json({
         message: "File processing error",
+        error: error.message
+      });
+    }
+
+    if (error.message.includes('Authentication') || error.message.includes('token')) {
+      return res.status(401).json({
+        message: "Authentication failed",
         error: error.message
       });
     }
