@@ -21,7 +21,7 @@ const Header: React.FC = () => {
       alignItems: "center",
       padding: "0px 6rem"
     },
-    logoImg: { width: "19rem", height: "5.5rem" },
+    logoImg: { width: "24rem", height: "5.5rem" },
     rightImage: { marginRight: "40px" },
     rightImageImg: { width: "25rem", height: "auto", maxWidth: "100%", objectFit: "contain" as "contain" },
   };

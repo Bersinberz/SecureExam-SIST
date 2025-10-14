@@ -16,7 +16,7 @@ export interface Student {
 
 export const getStudentsByFilter = async (filter: StudentFilter): Promise<Student[]> => {
   try {
-    const response = await axiosInstance.get<Student[]>('/students', {
+    const response = await axiosInstance.get<Student[]>('/table/students', {
       params: filter,
     });
     return response.data;

@@ -37,9 +37,9 @@ interface ValidationRules {
 
 const Login: React.FC = () => {
   const [userType, setUserType] = useState<UserType>("");
-  const [registerNumber, setRegisterNumber] = useState("");
+  const [registerNumber, setRegisterNumber] = useState("43611024");
   const [email, setEmail] = useState("staff@gmail.com");
-  const [password, setPassword] = useState("Staff@123");
+  const [password, setPassword] = useState("Test@123");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [countdown, setCountdown] = useState(15);
@@ -80,9 +80,9 @@ const Login: React.FC = () => {
   const handleMessageHide = () => setShowMessage(false);
 
   const clearInputs = () => {
-    setRegisterNumber("");
+    setRegisterNumber("43611024");
     setEmail("staff@gmail.com");
-    setPassword("Staff@123");
+    setPassword("Test@123");
     setValidationErrors({});
     setTouchedFields(new Set());
   };
@@ -339,7 +339,6 @@ const Login: React.FC = () => {
 
       displayMessage(errorMessage, "error");
 
-      // Clear password field for security (but keep staff demo credentials)
       if (userType === "student") {
         setPassword("");
       }
@@ -351,7 +350,7 @@ const Login: React.FC = () => {
       displayMessage("Invalid user identifier for exam redirect", "error");
       return;
     }
-    window.location.href = `/compiler?registerNumber=${encodeURIComponent(identifier)}`;
+    navigate(`/code-compiler`);
   };
 
   const handleStartExam = () => {
@@ -458,11 +457,6 @@ const Login: React.FC = () => {
                 />
                 {shouldShowError("registerNumber") && (
                   <div style={styles.errorText}>{getErrorMessage("registerNumber")}</div>
-                )}
-                {registerNumber.length > 0 && (
-                  <div style={{ fontSize: "0.875rem", color: "#666", marginTop: "0.25rem" }}>
-                    {registerNumber.length}/8 digits
-                  </div>
                 )}
               </>
             )}

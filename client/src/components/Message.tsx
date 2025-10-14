@@ -21,10 +21,10 @@ const Message: React.FC<MessageProps> = ({
   const [isHovered, setIsHovered] = useState(false);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const startTimer = (timeRemaining = duration) => {
-    clearTimers();
+  // Start the timer
+  const startTimer = (_timeRemaining = duration) => {
+    clearInterval(intervalRef.current!);
     const progressDecreasePerStep = 100 / (duration / 50);
 
     intervalRef.current = setInterval(() => {
@@ -32,39 +32,29 @@ const Message: React.FC<MessageProps> = ({
         const nextProgress = prev - progressDecreasePerStep;
         if (nextProgress <= 0) {
           clearInterval(intervalRef.current!);
+          hideMessage();
           return 0;
         }
         return nextProgress;
       });
     }, 50);
-
-    timerRef.current = setTimeout(hideMessage, timeRemaining);
   };
 
   const pauseTimer = () => {
-    clearTimers();
-  };
-
-  const clearTimers = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    if (timerRef.current) clearTimeout(timerRef.current);
+    clearInterval(intervalRef.current!);
   };
 
   const hideMessage = () => {
-    setIsVisible(false);
-    clearTimers();
-    setTimeout(() => onHide(), 400);
+    setIsVisible(false); // triggers CSS fade out
+    clearInterval(intervalRef.current!);
+    setTimeout(() => onHide(), 400); // remove from DOM after animation
   };
 
   useEffect(() => {
     setIsVisible(true);
-    if (!isHovered) {
-      startTimer();
-    }
-    return () => {
-      clearTimers();
-    };
-  }, [duration, onHide]);
+    if (!isHovered) startTimer();
+    return () => clearInterval(intervalRef.current!);
+  }, []);
 
   useEffect(() => {
     if (isVisible) {
@@ -113,23 +103,12 @@ const Message: React.FC<MessageProps> = ({
       zIndex: 10000,
     };
     switch (pos) {
-      case "top-left":
-        return { ...style, top: "20px", left: "20px" };
-      case "bottom-right":
-        return { ...style, bottom: "20px", right: "20px" };
-      case "bottom-left":
-        return { ...style, bottom: "20px", left: "20px" };
-      case "center":
-        return {
-          ...style,
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          alignItems: "center",
-        };
+      case "top-left": return { ...style, top: "20px", left: "20px" };
+      case "bottom-right": return { ...style, bottom: "20px", right: "20px" };
+      case "bottom-left": return { ...style, bottom: "20px", left: "20px" };
+      case "center": return { ...style, top: "50%", left: "50%", transform: "translate(-50%, -50%)", alignItems: "center" };
       case "top-right":
-      default:
-        return { ...style, top: "20px", right: "20px" };
+      default: return { ...style, top: "20px", right: "20px" };
     }
   };
 
@@ -218,14 +197,7 @@ const Message: React.FC<MessageProps> = ({
       >
         <div style={iconContainerStyle}>{icons[type]}</div>
         <span style={textStyle}>{text}</span>
-
-        {/* Close button */}
-        <FiX
-          style={closeBtnStyle}
-          size={20}
-          onClick={hideMessage}
-        />
-
+        <FiX style={closeBtnStyle} size={20} onClick={hideMessage} />
         <div style={progressBarStyle}></div>
       </div>
     </div>
