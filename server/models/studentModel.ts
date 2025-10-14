@@ -7,6 +7,7 @@ export interface IStudent extends Document {
   department: string;
   section: string;
   year: string;
+  assignedQuestion: string;
   password: string;
 }
 
@@ -17,6 +18,7 @@ const StudentSchema: Schema<IStudent> = new Schema(
     department: { type: String, required: true },
     section: { type: String, required: true },
     year: {type: String, required: true},
+    assignedQuestion: { type: String },
     password: { type: String, required: true },
   },
   { collection: "student" }

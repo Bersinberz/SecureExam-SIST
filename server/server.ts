@@ -10,8 +10,6 @@ import { requestQueue } from "./middleware/requestQueue";
 import authRoutes from "./routes/authRoutes";
 import examRoutes from "./routes/examRoutes";
 import tableRoutes from "./routes/tableRoutes";
-
-import studentRoutes from "./routes/studentRoutes";
 import codeRoutes from "./routes/codeRoutes";
 
 // --------------------
@@ -44,10 +42,8 @@ app.use(requestQueue);
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/exam", examRoutes);
-app.use("api/get", tableRoutes)
-
-app.use("/api/students", studentRoutes);
-app.use("/api/code", codeRoutes);
+app.use("/api/table", tableRoutes)
+app.use("/api/code", codeRoutes)
 
 // Health check
 app.get("/health", (req, res) => {

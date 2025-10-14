@@ -1,54 +1,84 @@
-import { Request, Response } from 'express';
-import { Code } from '../models/codeModel';
+import { Request, Response } from "express";
+import { Student } from "../models/studentModel";
+import { ExamModel } from "../models/examModel";
+import { getUserIdFromToken, getUserTypeFromToken } from "../utils/tokenUtils";
 
-export const submitCode = async (req: Request, res: Response): Promise<void> => {
+// ------------------ GET EXAM DATA ------------------
+export const getExamData = async (req: Request, res: Response): Promise<void> => {
   try {
-    let { registerNumber, language, code, assignedQuestion } = req.body;
+    const userType = getUserTypeFromToken(req);
 
-    if (!registerNumber || !language || !code || !assignedQuestion) {
-      res.status(400).json({ message: 'Missing required fields' });
+    if (userType !== "student") {
+      res.status(403).json({
+        success: false,
+        message: "Access denied. Student access required.",
+      });
       return;
     }
 
-    registerNumber = parseInt(registerNumber, 10);
+    // Extract registerNumber from token or student record
+    const userId = getUserIdFromToken(req);
+    const student = await Student.findById(userId);
 
-    if (isNaN(registerNumber)) {
-      res.status(400).json({ message: 'Invalid register number format' });
+    if (!student) {
+      res.status(404).json({
+        success: false,
+        message: "Student not found!",
+      });
       return;
     }
 
-    const result = await Code.create({
-      registerNumber,
-      language,
-      code,
-      assignedQuestion,
-      submittedAt: new Date()
+    if (!student.department || !student.section || !student.year) {
+      res.status(400).json({
+        success: false,
+        message: "Student profile incomplete. Missing department, section, or year.",
+      });
+      return;
+    }
+
+    const exams = await ExamModel.find({
+      department: student.department,
+      section: student.section,
+      year: student.year,
     });
 
-    if (result) {
-      console.log("📝", registerNumber, "has completed and submitted the exam");
-      res.json({ message: 'Code saved successfully' });
-    } else {
-      res.status(500).json({ message: 'Failed to save code' });
-    }
-  } catch (error) {
-    console.error('Error saving code:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-export const getAllCodes = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const codeDocuments = await Code.find({});
-
-    if (!codeDocuments || codeDocuments.length === 0) {
-      res.status(404).json({ message: "No code submissions found" });
+    if (!exams.length) {
+      res.status(404).json({
+        success: false,
+        message: `No exams available for ${student.department} - ${student.section} - Year ${student.year}.`,
+      });
       return;
     }
 
-    res.json(codeDocuments);
+    const currentExam = exams[0];
+
+    res.status(200).json({
+      success: true,
+      message: "Exam data fetched successfully",
+      data: {
+        exam: {
+          id: currentExam._id,
+          name: currentExam.examName,
+          time: currentExam.examTime,
+          department: currentExam.department,
+          section: currentExam.section,
+          year: currentExam.year,
+        },
+        student: {
+          registerNumber: student.registerNumber,
+          userName: student.userName,
+          department: student.department,
+          section: student.section,
+          year: student.year,
+        },
+        assignedQuestion: student.assignedQuestion || "No question assigned",
+      },
+    });
   } catch (error) {
-    console.error("Error fetching code submissions:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Get exam data error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching exam data",
+    });
   }
 };
