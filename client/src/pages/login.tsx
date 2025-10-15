@@ -50,8 +50,10 @@ const Login: React.FC = () => {
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
   const [hovered, setHovered] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const countdownRef = useRef<number | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   const validationRules: ValidationRules = {
@@ -174,6 +176,18 @@ const Login: React.FC = () => {
   useEffect(() => {
     validateTouchedFields();
   }, [validateTouchedFields]);
+
+  // Handle modal animation
+  useEffect(() => {
+    if (showSuccessModal) {
+      // Small delay to ensure the modal is in DOM before starting animation
+      setTimeout(() => {
+        setModalVisible(true);
+      }, 10);
+    } else {
+      setModalVisible(false);
+    }
+  }, [showSuccessModal]);
 
   const handleUserTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newUserType = e.target.value as UserType;
@@ -367,6 +381,8 @@ const Login: React.FC = () => {
     }
 
     if (countdownRef.current) clearInterval(countdownRef.current);
+    setShowSuccessModal(false);
+    setModalVisible(false);
     redirectToExam(identifier);
   };
 
@@ -392,21 +408,199 @@ const Login: React.FC = () => {
 
   // --- Styles ---
   const styles = {
-    loginContainer: { background: "white", marginTop: "150px", borderRadius: "20px", boxShadow: "0 4px 8px rgba(0,0,0,0.1)", padding: "2rem", maxWidth: "500px", textAlign: "center" as "center" },
-    input: { width: "70%", padding: "0.75rem", margin: "0.5rem 0", border: "1px solid #ccc", borderRadius: "10px", fontSize: "1rem", backgroundColor: "white", outline: "none", boxShadow: "none", transition: "none" },
-    inputError: { border: "1px solid #d32f2f", backgroundColor: "#fff5f5", outline: "none", boxShadow: "none", transition: "none" },
-    select: { width: "60%", padding: "0.75rem", margin: "1.5rem", border: "1px solid #ccc", borderRadius: "20px", fontSize: "1rem", backgroundColor: "white", appearance: "none" as any, WebkitAppearance: "none" as any, MozAppearance: "none" as any, backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='7'><path fill='black' d='M0 0l5 7 5-7z'/></svg>\")", backgroundRepeat: "no-repeat", backgroundPosition: "calc(100% - 15px) center", backgroundSize: "12px", outline: "none", boxShadow: "none", transition: "none" },
-    selectError: { border: "1px solid #d32f2f", backgroundColor: "#fff5f5", outline: "none", boxShadow: "none", transition: "none" },
-    button: { backgroundColor: hovered ? "#9e1c3f" : "#831238", color: "white", padding: "0.75rem", border: "none", borderRadius: "10px", marginTop: "30px", width: "45%", cursor: "pointer", fontWeight: "bold" },
-    buttonDisabled: { backgroundColor: "#cccccc", cursor: "not-allowed" },
-    errorText: { color: "#d32f2f", fontSize: "0.875rem", marginTop: "0.25rem", textAlign: "left" as "left", width: "70%", margin: "0 auto" },
-    customModal: { display: showSuccessModal ? "block" : "none", position: "fixed" as "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", backgroundColor: "white", borderRadius: "15px", zIndex: 1000, boxShadow: "0 4px 15px rgba(0,0,0,0.2)", padding: "20px", width: "90%", maxWidth: "600px", overflow: "hidden" as "hidden" },
-    customModalContent: { backgroundColor: "#f9f9f9", color: "#333", padding: "20px", borderRadius: "10px", textAlign: "center" as "center", border: "2px solid #ddd", boxShadow: "0 2px 5px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column" as "column", alignItems: "center" },
-    cssbuttonsIoButton: { background: "#831238", color: "white", fontFamily: "inherit", padding: "0.35em 1.2em", fontSize: "17px", fontWeight: 500, borderRadius: "0.9em", border: "none", display: "flex", alignItems: "center", boxShadow: "inset 0 0 1.6em -0.6em #714da6", overflow: "hidden", position: "relative" as "relative", height: "2.8em", cursor: "pointer", marginTop: "15px" },
+    loginContainer: { 
+      background: "white", 
+      marginTop: "150px", 
+      borderRadius: "20px", 
+      boxShadow: "0 4px 8px rgba(0,0,0,0.1)", 
+      padding: "2rem", 
+      maxWidth: "500px", 
+      textAlign: "center" as "center",
+      transition: "filter 0.3s ease, transform 0.3s ease",
+      filter: showSuccessModal ? "blur(5px)" : "none",
+      transform: showSuccessModal ? "scale(0.98)" : "scale(1)"
+    },
+    input: { 
+      width: "70%", 
+      padding: "0.75rem", 
+      margin: "0.5rem 0", 
+      border: "1px solid #ccc", 
+      borderRadius: "10px", 
+      fontSize: "1rem", 
+      backgroundColor: "white", 
+      outline: "none", 
+      boxShadow: "none", 
+      transition: "none" 
+    },
+    inputError: { 
+      border: "1px solid #d32f2f", 
+      backgroundColor: "#fff5f5", 
+      outline: "none", 
+      boxShadow: "none", 
+      transition: "none" 
+    },
+    select: { 
+      width: "60%", 
+      padding: "0.75rem", 
+      margin: "1.5rem", 
+      border: "1px solid #ccc", 
+      borderRadius: "20px", 
+      fontSize: "1rem", 
+      backgroundColor: "white", 
+      appearance: "none" as any, 
+      WebkitAppearance: "none" as any, 
+      MozAppearance: "none" as any, 
+      backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='7'><path fill='black' d='M0 0l5 7 5-7z'/></svg>\")", 
+      backgroundRepeat: "no-repeat", 
+      backgroundPosition: "calc(100% - 15px) center", 
+      backgroundSize: "12px", 
+      outline: "none", 
+      boxShadow: "none", 
+      transition: "none" 
+    },
+    selectError: { 
+      border: "1px solid #d32f2f", 
+      backgroundColor: "#fff5f5", 
+      outline: "none", 
+      boxShadow: "none", 
+      transition: "none" 
+    },
+    button: { 
+      backgroundColor: hovered ? "#9e1c3f" : "#831238", 
+      color: "white", 
+      padding: "0.75rem", 
+      border: "none", 
+      borderRadius: "10px", 
+      marginTop: "30px", 
+      width: "45%", 
+      cursor: "pointer", 
+      fontWeight: "bold" 
+    },
+    buttonDisabled: { 
+      backgroundColor: "#cccccc", 
+      cursor: "not-allowed" 
+    },
+    errorText: { 
+      color: "#d32f2f", 
+      fontSize: "0.875rem", 
+      marginTop: "0.25rem", 
+      textAlign: "left" as "left", 
+      width: "70%", 
+      margin: "0 auto" 
+    },
+    customModalOverlay: {
+      display: showSuccessModal ? "flex" : "none",
+      position: "fixed" as "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      backdropFilter: "blur(8px)",
+      WebkitBackdropFilter: "blur(8px)",
+      zIndex: 999,
+      alignItems: "center",
+      justifyContent: "center",
+      opacity: modalVisible ? 1 : 0,
+      transition: "opacity 0.3s ease"
+    },
+    customModal: {
+      backgroundColor: "white",
+      borderRadius: "20px",
+      boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+      padding: "30px",
+      width: "90%",
+      maxWidth: "500px",
+      textAlign: "center" as "center",
+      transform: modalVisible ? "scale(1) translateY(0)" : "scale(0.7) translateY(-50px)",
+      opacity: modalVisible ? 1 : 0,
+      transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+      border: "2px solid #831238",
+      position: "relative" as "relative",
+      overflow: "hidden"
+    },
+    customModalContent: {
+      backgroundColor: "#f9f9f9",
+      color: "#333",
+      padding: "25px",
+      borderRadius: "15px",
+      textAlign: "center" as "center",
+      border: "2px solid #ddd",
+      boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+      display: "flex",
+      flexDirection: "column" as "column",
+      alignItems: "center",
+      gap: "15px"
+    },
+    modalHeader: {
+      color: "#831238",
+      fontSize: "28px",
+      fontWeight: "bold",
+      marginBottom: "10px",
+      textShadow: "1px 1px 2px rgba(0,0,0,0.1)"
+    },
+    modalList: {
+      textAlign: "left" as "left",
+      fontSize: "16px",
+      lineHeight: "1.6",
+      paddingLeft: "20px",
+      margin: "15px 0"
+    },
+    countdownText: {
+      fontSize: "18px",
+      fontWeight: "bold",
+      color: "#831238",
+      margin: "10px 0",
+      padding: "8px 15px",
+      backgroundColor: "#fff0f5",
+      borderRadius: "10px",
+      display: "inline-block"
+    },
+    cssbuttonsIoButton: {
+      background: "linear-gradient(45deg, #831238, #9e1c3f)",
+      color: "white",
+      fontFamily: "inherit",
+      padding: "0.8em 1.5em",
+      fontSize: "18px",
+      fontWeight: 600,
+      borderRadius: "12px",
+      border: "none",
+      display: "flex",
+      alignItems: "center",
+      boxShadow: "0 5px 15px rgba(131, 18, 56, 0.4)",
+      overflow: "hidden",
+      position: "relative" as "relative",
+      height: "3em",
+      cursor: "pointer",
+      marginTop: "15px",
+      transition: "all 0.3s ease",
+      transform: "translateY(0)"
+    },
+    cssbuttonsIoButtonHover: {
+      transform: "translateY(-2px)",
+      boxShadow: "0 8px 20px rgba(131, 18, 56, 0.6)"
+    },
+    modalDecoration: {
+      position: "absolute" as "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      height: "5px",
+      background: "linear-gradient(90deg, #831238, #9e1c3f, #831238)",
+      borderRadius: "20px 20px 0 0"
+    }
   };
 
   return (
-    <div className="d-flex flex-column min-vh-100" style={{ background: "linear-gradient(135deg,#f5f5f5,#d3d3d3)", fontFamily: '"Roboto",sans-serif', overflow: "hidden" }}>
+    <div 
+      className="d-flex flex-column min-vh-100" 
+      style={{ 
+        background: "linear-gradient(135deg,#f5f5f5,#d3d3d3)", 
+        fontFamily: '"Roboto",sans-serif', 
+        overflow: "hidden",
+        position: "relative"
+      }}
+    >
       {/* Header */}
       <Header />
 
@@ -529,18 +723,46 @@ const Login: React.FC = () => {
         </div>
       </div>
 
-      {/* Student modal */}
-      <div style={styles.customModal}>
-        <div style={styles.customModalContent}>
-          <h2>Welcome to the Exam!</h2>
-          <ul style={{ textAlign: "left" }}>
-            <li>Exam will start when timer ends.</li>
-            <li>Finish button ends exam automatically.</li>
-            <li>No multiple logins allowed.</li>
-            <li>Severe action for malpractice.</li>
-          </ul>
-          {countdown > 0 && <p>Exam is Starting in {countdown} seconds!</p>}
-          <button style={styles.cssbuttonsIoButton} onClick={handleStartExam}>Get Started</button>
+      {/* Student modal overlay */}
+      <div 
+        style={styles.customModalOverlay}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            setShowSuccessModal(false);
+            setModalVisible(false);
+          }
+        }}
+      >
+        <div 
+          ref={modalRef}
+          style={styles.customModal}
+        >
+          <div style={styles.modalDecoration}></div>
+          <div style={styles.customModalContent}>
+            <h2 style={styles.modalHeader}>Welcome to the Exam!</h2>
+            <ul style={styles.modalList}>
+              <li>Exam will start when timer ends.</li>
+              <li>Finish button ends exam automatically.</li>
+              <li>No multiple logins allowed.</li>
+              <li>Severe action for malpractice.</li>
+            </ul>
+            {countdown > 0 && (
+              <p style={styles.countdownText}>
+                Exam is Starting in {countdown} second{countdown !== 1 ? 's' : ''}!
+              </p>
+            )}
+            <button 
+              style={{
+                ...styles.cssbuttonsIoButton,
+                ...(hovered ? styles.cssbuttonsIoButtonHover : {})
+              }} 
+              onClick={handleStartExam}
+              onMouseEnter={() => setHovered(true)}
+              onMouseLeave={() => setHovered(false)}
+            >
+              Get Started
+            </button>
+          </div>
         </div>
       </div>
 
@@ -552,7 +774,5 @@ const Login: React.FC = () => {
     </div>
   );
 };
-
-
 
 export default Login;

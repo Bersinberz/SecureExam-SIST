@@ -7,10 +7,10 @@ import Loader from '../components/Loader';
 import Message from '../components/Message';
 
 // Custom Theme Colors
-const THEME_PRIMARY = '#9e1c3f'; // Accent Red / Primary Action
-const THEME_SECONDARY = '#831238'; // Darker Red / Header / Terminal Accent
-const THEME_BG = '#f4f7f9'; // Light overall background
-const CODE_BG_DARK = '#1e1e1e'; // Monaco Editor / Terminal Background
+const THEME_PRIMARY = '#9e1c3f';
+const THEME_SECONDARY = '#831238';
+const THEME_BG = '#f4f7f9';
+const CODE_BG_DARK = '#1e1e1e';
 
 // Custom Styles for Theme and Unique Elements
 const customStyles: { [key: string]: React.CSSProperties } = {
@@ -35,25 +35,14 @@ const customStyles: { [key: string]: React.CSSProperties } = {
         fontWeight: 'bold',
         boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
     },
-    // Dropdown Style
-    dropdown: {
-        borderColor: THEME_PRIMARY,
-        color: THEME_SECONDARY,
-        fontWeight: 'bold',
-        padding: '0.5rem 1rem',
-        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23${THEME_PRIMARY.substring(1)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: `right 1rem center`,
-        backgroundSize: `1.25rem 1.25rem`,
-    },
     // Consolidated Alert Style for Left Panel Content
     contentAlertStyle: {
         borderLeft: `5px solid ${THEME_PRIMARY}`,
-        backgroundColor: '#fcfcfc', // Very light background for content boxes
+        backgroundColor: '#fcfcfc',
     }
 };
 
-// Inside your component file, at the top
+// Button Styles (keep your existing button styles)
 const runButtonStyles: React.CSSProperties = {
     fontFamily: 'inherit',
     fontSize: '16px',
@@ -65,8 +54,8 @@ const runButtonStyles: React.CSSProperties = {
     cursor: 'pointer',
     border: 'none',
     borderRadius: '50px',
-    fontWeight: 1000,
     transition: 'all 0.3s ease-in-out',
+    width: '140px'
 };
 
 const runButtonHoverStyles: React.CSSProperties = {
@@ -98,7 +87,7 @@ const spanDynamicStyles = (hovered: boolean): React.CSSProperties => ({
     opacity: hovered ? 0 : 1,
 });
 
-// Submit Button base style (like #quitButton)
+// Submit Button base style
 const submitButtonBase: React.CSSProperties = {
     fontSize: '18px',
     display: 'inline-block',
@@ -133,8 +122,119 @@ const submitButtonDisabled: React.CSSProperties = {
     opacity: 0.6,
 };
 
+// Enhanced Dropdown Styles
+const enhancedDropdownStyles = {
+    container: {
+        position: 'relative' as 'relative',
+        minWidth: '180px',
+        maxWidth: '200px',
+    },
+    label: {
+        color: THEME_SECONDARY,
+        fontWeight: '600',
+        fontSize: '0.875rem',
+        marginBottom: '0.5rem',
+        display: 'block',
+    },
+    select: {
+        width: '100%',
+        padding: '0.75rem 1rem',
+        border: `2px solid ${THEME_PRIMARY}`,
+        borderRadius: '12px',
+        backgroundColor: 'white',
+        color: THEME_SECONDARY,
+        fontWeight: '600',
+        fontSize: '0.9rem',
+        cursor: 'pointer',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        appearance: 'none' as 'none',
+        // backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23${THEME_PRIMARY.substring(1)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'right 1rem center',
+        backgroundSize: '1rem 1rem',
+        boxShadow: '0 2px 8px rgba(131, 18, 56, 0.1)',
+    },
+    selectHover: {
+        borderColor: THEME_SECONDARY,
+        boxShadow: '0 4px 12px rgba(131, 18, 56, 0.2)',
+        transform: 'translateY(-1px)',
+    },
+    selectFocus: {
+        borderColor: THEME_SECONDARY,
+        boxShadow: '0 4px 16px rgba(131, 18, 56, 0.3)',
+        outline: 'none',
+    },
+    icon: {
+        position: 'absolute' as 'absolute',
+        right: '1rem',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        color: THEME_PRIMARY,
+        pointerEvents: 'none' as 'none',
+        transition: 'transform 0.3s ease',
+    },
+    iconRotated: {
+        transform: 'translateY(-50%) rotate(180deg)',
+    }
+};
 
-// Interface definitions (kept for completeness)
+// Enhanced Modal Styles
+const enhancedModalStyles = {
+    overlay: {
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+    },
+    modal: {
+        border: 'none',
+        borderRadius: '20px',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+        overflow: 'hidden' as 'hidden',
+    },
+    header: {
+        backgroundColor: THEME_SECONDARY,
+        color: 'white',
+        borderBottom: 'none',
+        padding: '1.5rem 2rem',
+        position: 'relative' as 'relative',
+    },
+    body: {
+        padding: '2rem',
+        textAlign: 'center' as 'center',
+    },
+    footer: {
+        borderTop: 'none',
+        padding: '1.5rem 2rem',
+        justifyContent: 'center' as 'center',
+    },
+    successIcon: {
+        fontSize: '4rem',
+        color: '#28a745',
+        marginBottom: '1rem',
+    },
+    progressBar: {
+        height: '8px',
+        borderRadius: '10px',
+        backgroundColor: '#e9ecef',
+        overflow: 'hidden' as 'hidden',
+        marginTop: '1rem',
+    },
+    progressFill: {
+        height: '100%',
+        backgroundColor: '#28a745',
+        transition: 'width 1s linear',
+    },
+    decoration: {
+        position: 'absolute' as 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '4px',
+        background: `linear-gradient(90deg, ${THEME_PRIMARY}, ${THEME_SECONDARY}, ${THEME_PRIMARY})`,
+    }
+};
+
+// Interface definitions
 interface ExamData {
     id: string;
     name: string;
@@ -187,12 +287,35 @@ const CodeCompiler: React.FC = () => {
     // Hover states for custom buttons
     const [isRunHovered, setIsRunHovered] = useState(false);
     const [isSubmitHovered, setIsSubmitHovered] = useState(false);
+    const [isDropdownHovered, setIsDropdownHovered] = useState(false);
+    const [isDropdownFocused, setIsDropdownFocused] = useState(false);
 
+    // Animation states for modals
+    const [modalVisible, setModalVisible] = useState(false);
+    const [successModalVisible, setSuccessModalVisible] = useState(false);
 
     const editorRef = useRef<any>(null);
     const terminalRef = useRef<HTMLDivElement>(null);
+    const dropdownRef = useRef<HTMLSelectElement>(null);
 
-    // Initialization and timer effects
+    // Modal animation effects
+    useEffect(() => {
+        if (showConfirmation) {
+            setTimeout(() => setModalVisible(true), 10);
+        } else {
+            setModalVisible(false);
+        }
+    }, [showConfirmation]);
+
+    useEffect(() => {
+        if (showCountdown) {
+            setTimeout(() => setSuccessModalVisible(true), 10);
+        } else {
+            setSuccessModalVisible(false);
+        }
+    }, [showCountdown]);
+
+    // Initialization and timer effects (keep your existing useEffect hooks)
     useEffect(() => {
         const token = getToken();
 
@@ -236,8 +359,7 @@ const CodeCompiler: React.FC = () => {
         }
     }, [terminalContent]);
 
-
-    // --- Handlers (Kept logic the same) ---
+    // Your existing handler functions (keep them as they are)
     const showMessage = (text: string, type: 'success' | 'error' | 'info', duration?: number) => {
         const id = Date.now().toString();
         setMessages(prev => [...prev, { id, text, type, duration }]);
@@ -372,14 +494,13 @@ const CodeCompiler: React.FC = () => {
 
         const defaultCode = {
             python: '# Write your Python code here\nprint("Hello, World!")',
-            java: '// Write your Java code here\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}',
-            c: '// Write your C code here\n#include <stdio.h>\n\nint main() {\n    printf("Hello, World!\\n");\n    return 0;\n}',
-            cpp: '// Write your C++ code here\n#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}',
+            java: '// Write your Java code here\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}',
+            c: '// Write your C code here\n#include <stdio.h>\n\nint main() {\n    printf("Hello, World!\\n");\n    return 0;\n}',
+            cpp: '// Write your C++ code here\n#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}',
             javascript: '// Write your JavaScript code here\nconsole.log("Hello, World!");'
         }[newLanguage] || '// Write your code here';
 
         setCode(defaultCode);
-        showMessage(`Language changed to ${newLanguage}`, 'info', 2000);
     };
 
     const handleSubmitCode = async () => {
@@ -443,7 +564,7 @@ const CodeCompiler: React.FC = () => {
         editorRef.current = editor;
     };
 
-    // --- Loading and Error Screens ---
+    // Loading and Error Screens (keep your existing code)
     if (loading) {
         return (
             <>
@@ -461,7 +582,7 @@ const CodeCompiler: React.FC = () => {
                     <Alert style={{ backgroundColor: THEME_SECONDARY, color: 'white' }} className="text-center border-0 shadow-lg">
                         <h4>Error</h4>
                         <p>{error}</p>
-                        <Button style={{ backgroundColor: THEME_PRIMARY, borderColor: THEME_PRIMARY }} onClick={() => window.location.href = '/login'}>
+                        <Button style={{ backgroundColor: THEME_PRIMARY, borderColor: THEME_PRIMARY }} onClick={() => window.location.href = '/'}>
                             Back to Login
                         </Button>
                     </Alert>
@@ -470,7 +591,6 @@ const CodeCompiler: React.FC = () => {
         );
     }
 
-    // --- Main Render ---
     return (
         <div className="secure-exam-compiler" style={{ backgroundColor: THEME_BG, minHeight: '100vh' }}>
             {/* Custom Header (Static) */}
@@ -491,7 +611,7 @@ const CodeCompiler: React.FC = () => {
             {/* Main Content Area */}
             <Container fluid className="py-3 h-100">
                 <Row className="g-3">
-                    {/* Left Column: Problem Statement (Full Column Scroll) */}
+                    {/* Left Column: Problem Statement */}
                     <div
                         style={{
                             ...customStyles.problemArea,
@@ -500,13 +620,13 @@ const CodeCompiler: React.FC = () => {
                             flexDirection: "column",
                             height: "100%",
                             overflowY: "auto",
-                            backgroundColor: "#f9f9f9", // subtle light background for comfort
+                            backgroundColor: "#f9f9f9",
                             borderRadius: "8px",
                             boxShadow: "inset 0 0 4px rgba(0,0,0,0.05)",
                             padding: "1rem 1.25rem",
                         }}
                     >
-                        {/* --- Student Info Header --- */}
+                        {/* Student Info Header */}
                         {studentData && (
                             <div
                                 style={{
@@ -528,7 +648,7 @@ const CodeCompiler: React.FC = () => {
                             </div>
                         )}
 
-                        {/* --- Exam Title and Timer --- */}
+                        {/* Exam Title and Timer */}
                         <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-1">
                             <h4 className="mb-0 fw-bold" style={{ color: THEME_SECONDARY }}>
                                 <i className="fas fa-book-open me-2"></i>
@@ -551,7 +671,7 @@ const CodeCompiler: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* --- Question Section --- */}
+                        {/* Question Section */}
                         <h5 className="text-dark mt-3 mb-2 fw-bold">Question:</h5>
                         <div
                             style={{
@@ -574,7 +694,7 @@ const CodeCompiler: React.FC = () => {
                             )}
                         </div>
 
-                        {/* --- Input Format --- */}
+                        {/* Input Format */}
                         <h6 className="mt-4 text-dark fw-bold">Input Format:</h6>
                         <Alert
                             variant="light"
@@ -592,7 +712,7 @@ const CodeCompiler: React.FC = () => {
                             unexpected input-related errors.
                         </Alert>
 
-                        {/* --- Output Format --- */}
+                        {/* Output Format */}
                         <h6 className="mt-4 text-dark fw-bold">Output Format:</h6>
                         <Alert
                             variant="light"
@@ -610,10 +730,10 @@ const CodeCompiler: React.FC = () => {
                             from the expected output format may result in incorrect evaluation.
                         </Alert>
 
-                        {/* --- Note Section --- */}
+                        {/* Note Section */}
                         <Alert
                             variant="light"
-                            className="mt-4 shadow-sm" // removed 'border'
+                            className="mt-4 shadow-sm"
                             style={{
                                 ...customStyles.contentAlertStyle,
                                 backgroundColor: "#fefefe",
@@ -632,7 +752,6 @@ const CodeCompiler: React.FC = () => {
                             attempt the exam only once, and re-login is not allowed after finishing.
                             Any malpractice will result in strict action. <strong>All the best!</strong>
                         </Alert>
-
                     </div>
 
                     {/* Right Column: Code Editor, Control Bar & Terminal */}
@@ -641,22 +760,43 @@ const CodeCompiler: React.FC = () => {
                         <Card className="shadow-lg border-0 mb-3">
                             <Card.Body className="p-3">
                                 <div className="d-flex align-items-center justify-content-between flex-wrap">
-                                    {/* Language Dropdown */}
-                                    <div className="me-3 d-flex flex-column">
-                                        <Form.Label className="fw-bold mb-1 small" style={{ color: THEME_SECONDARY }}>
-                                            Coding Language:
+                                    {/* Enhanced Language Dropdown */}
+                                    <div style={enhancedDropdownStyles.container}>
+                                        <Form.Label style={enhancedDropdownStyles.label}>
+                                            Change Language:
                                         </Form.Label>
-                                        <Form.Select
-                                            value={language}
-                                            onChange={handleLanguageChange}
-                                            style={{ minWidth: '150px', maxWidth: '180px' }}
-                                        >
-                                            <option value="javascript">JavaScript</option>
-                                            <option value="python">Python</option>
-                                            <option value="java">Java</option>
-                                            <option value="c">C</option>
-                                            <option value="cpp">C++</option>
-                                        </Form.Select>
+                                        <div style={{ position: 'relative' }}>
+                                            <Form.Select
+                                                ref={dropdownRef}
+                                                value={language}
+                                                onChange={handleLanguageChange}
+                                                onMouseEnter={() => setIsDropdownHovered(true)}
+                                                onMouseLeave={() => setIsDropdownHovered(false)}
+                                                onFocus={() => setIsDropdownFocused(true)}
+                                                onBlur={() => setIsDropdownFocused(false)}
+                                                style={{
+                                                    ...enhancedDropdownStyles.select,
+                                                    ...(isDropdownHovered ? enhancedDropdownStyles.selectHover : {}),
+                                                    ...(isDropdownFocused ? enhancedDropdownStyles.selectFocus : {}),
+                                                }}
+                                            >
+                                                <option value="javascript">JavaScript</option>
+                                                <option value="python">Python</option>
+                                                <option value="java">Java</option>
+                                                <option value="c">C</option>
+                                                <option value="cpp">C++</option>
+                                            </Form.Select>
+                                            {/* <i
+                                                className="fas fa-chevron-down"
+                                                style={{
+                                                    ...enhancedDropdownStyles.icon,
+                                                    transform: isDropdownHovered || isDropdownFocused
+                                                        ? 'translateY(-50%) rotate(180deg)'  // arrow points up
+                                                        : 'translateY(-50%) rotate(0deg)',  // arrow points down
+                                                    transition: 'transform 0.3s ease',
+                                                }}
+                                            /> */}
+                                        </div>
                                     </div>
 
                                     {/* Buttons */}
@@ -680,7 +820,6 @@ const CodeCompiler: React.FC = () => {
                                                     RUN CODE
                                                 </span>
                                             </button>
-
                                         </div>
                                         <Button
                                             style={{
@@ -698,12 +837,10 @@ const CodeCompiler: React.FC = () => {
                                         >
                                             SUBMIT EXAM
                                         </Button>
-
                                     </div>
                                 </div>
                             </Card.Body>
                         </Card>
-
 
                         {/* Code Editor */}
                         <Card className="shadow-lg mb-4 border-0 rounded-3">
@@ -817,7 +954,7 @@ const CodeCompiler: React.FC = () => {
                                     style={{
                                         height: '250px',
                                         overflowY: 'auto',
-                                        backgroundColor: '#1e1e2f', // darker modern terminal background
+                                        backgroundColor: '#1e1e2f',
                                         color: '#e0e0e0',
                                         fontFamily: 'Fira Code, Consolas, monospace',
                                         fontSize: '0.95rem',
@@ -841,41 +978,109 @@ const CodeCompiler: React.FC = () => {
                 </Row>
             </Container>
 
-            {/* Modals (Styled for the theme) */}
-            <Modal show={showConfirmation} onHide={() => setShowConfirmation(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title style={{ color: THEME_SECONDARY }}>Confirm Submission</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <p>Are you sure you want to finish and close the exam?</p>
-                    <p className="text-muted small">
-                        Once submitted, you cannot make any changes to your code.
-                    </p>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowConfirmation(false)}>
-                        Cancel
-                    </Button>
-                    <Button style={{ backgroundColor: THEME_PRIMARY, borderColor: THEME_PRIMARY }} onClick={handleSubmitCode}>
-                        Yes, Submit Exam
-                    </Button>
-                </Modal.Footer>
+            {/* Enhanced Confirmation Modal */}
+            <Modal
+                show={showConfirmation}
+                onHide={() => setShowConfirmation(false)}
+                centered
+                style={enhancedModalStyles.overlay}
+                dialogClassName="custom-modal-dialog"
+            >
+                <div
+                    style={{
+                        ...enhancedModalStyles.modal,
+                        opacity: modalVisible ? 1 : 0,
+                        transform: modalVisible ? 'scale(1) translateY(0)' : 'scale(0.8) translateY(-20px)',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
+                >
+                    <div style={enhancedModalStyles.decoration}></div>
+                    <Modal.Header style={enhancedModalStyles.header} closeButton>
+                        <Modal.Title>
+                            <i className="fas fa-exclamation-triangle me-2"></i>
+                            Confirm Submission
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body style={enhancedModalStyles.body}>
+                        <div className="mb-3">
+                            <i className="fas fa-file-code" style={{ fontSize: '3rem', color: THEME_PRIMARY }}></i>
+                        </div>
+                        <h5 style={{ color: THEME_SECONDARY, marginBottom: '1rem' }}>
+                            Ready to Submit?
+                        </h5>
+                        <p className="mb-3">
+                            Are you sure you want to finish and close the exam?
+                        </p>
+                        <Alert variant="warning" className="small">
+                            <i className="fas fa-exclamation-circle me-2"></i>
+                            Once submitted, you cannot make any changes to your code.
+                        </Alert>
+                    </Modal.Body>
+                    <Modal.Footer style={enhancedModalStyles.footer}>
+                        <Button
+                            variant="outline-secondary"
+                            onClick={() => setShowConfirmation(false)}
+                            style={{
+                                padding: '0.5rem 1.5rem',
+                                borderRadius: '8px',
+                                border: `2px solid #6c757d`,
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            style={{
+                                backgroundColor: THEME_PRIMARY,
+                                borderColor: THEME_PRIMARY,
+                                padding: '0.5rem 1.5rem',
+                                borderRadius: '8px',
+                                border: '2px solid transparent',
+                            }}
+                            onClick={handleSubmitCode}
+                        >
+                            <i className="fas fa-paper-plane me-2"></i>
+                            Yes, Submit Exam
+                        </Button>
+                    </Modal.Footer>
+                </div>
             </Modal>
 
-            <Modal show={showCountdown} centered backdrop="static" keyboard={false}>
-                <Modal.Body className="text-center">
-                    <div className="mb-3">
-                        <i className="fas fa-check-circle text-success" style={{ fontSize: '3rem' }}></i>
-                    </div>
-                    <h5 className="text-success">Exam Submitted Successfully!</h5>
-                    <p>You can close the app in <strong>{countdown}</strong> seconds.</p>
-                    <div className="progress">
-                        <div
-                            className="progress-bar bg-success"
-                            style={{ width: `${(countdown / 10) * 100}%` }}
-                        ></div>
-                    </div>
-                </Modal.Body>
+            {/* Enhanced Success Modal */}
+            <Modal
+                show={showCountdown}
+                centered
+                backdrop="static"
+                keyboard={false}
+                style={enhancedModalStyles.overlay}
+            >
+                <div
+                    style={{
+                        ...enhancedModalStyles.modal,
+                        opacity: successModalVisible ? 1 : 0,
+                        transform: successModalVisible ? 'scale(1) translateY(0)' : 'scale(0.8) translateY(-20px)',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
+                >
+                    <div style={enhancedModalStyles.decoration}></div>
+                    <Modal.Body style={enhancedModalStyles.body}>
+                        <div className="mb-3">
+                            <i className="fas fa-check-circle" style={enhancedModalStyles.successIcon}></i>
+                        </div>
+                        <h5 className="text-success mb-3">Exam Submitted Successfully!</h5>
+                        <p className="mb-2">Your code has been saved successfully.</p>
+                        <p className="mb-3">
+                            You can close the app in <strong style={{ color: THEME_SECONDARY }}>{countdown}</strong> seconds.
+                        </p>
+                        <div style={enhancedModalStyles.progressBar}>
+                            <div
+                                style={{
+                                    ...enhancedModalStyles.progressFill,
+                                    width: `${(countdown / 10) * 100}%`
+                                }}
+                            ></div>
+                        </div>
+                    </Modal.Body>
+                </div>
             </Modal>
         </div>
     );
