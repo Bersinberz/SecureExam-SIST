@@ -21,7 +21,7 @@ const StudentSchema: Schema<IStudent> = new Schema(
     assignedQuestion: { type: String },
     password: { type: String, required: true },
   },
-  { collection: "student" }
+  { timestamps: true, collection: "student" }
 );
 
 export const Student: Model<IStudent> = mongoose.model<IStudent>(

@@ -13,7 +13,10 @@ const StaffSchema: Schema<IStaff> = new Schema(
     name: { type: String, required: true },
     password: { type: String, required: true },
   },
-  { collection: "staff" }
+  { 
+    collection: "staff",
+    timestamps: true,
+  }
 );
 
 export const Staff: Model<IStaff> = mongoose.model<IStaff>("Staff", StaffSchema);

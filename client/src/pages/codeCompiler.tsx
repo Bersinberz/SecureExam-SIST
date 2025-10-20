@@ -5,14 +5,14 @@ import { getToken, removeToken } from '../utils/tokenHelper';
 import Header from '../components/Header';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
+import { codeCompilerService } from '../services/codeCompilerService';
+import type { ExamData, StudentData, CodeExecutionResult, SubmissionResponse } from '../services/codeCompilerService';
 
-// Custom Theme Colors
 const THEME_PRIMARY = '#9e1c3f';
 const THEME_SECONDARY = '#831238';
 const THEME_BG = '#f4f7f9';
 const CODE_BG_DARK = '#1e1e1e';
 
-// Custom Styles for Theme and Unique Elements
 const customStyles: { [key: string]: React.CSSProperties } = {
     problemArea: {
         overflowY: 'auto',
@@ -23,7 +23,6 @@ const customStyles: { [key: string]: React.CSSProperties } = {
         scrollbarWidth: 'none',
         msOverflowStyle: 'none',
     },
-    // Timer Style
     timerBadge: {
         backgroundColor: THEME_PRIMARY,
         color: 'white',
@@ -35,14 +34,12 @@ const customStyles: { [key: string]: React.CSSProperties } = {
         fontWeight: 'bold',
         boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
     },
-    // Consolidated Alert Style for Left Panel Content
     contentAlertStyle: {
         borderLeft: `5px solid ${THEME_PRIMARY}`,
         backgroundColor: '#fcfcfc',
     }
 };
 
-// Button Styles (keep your existing button styles)
 const runButtonStyles: React.CSSProperties = {
     fontFamily: 'inherit',
     fontSize: '16px',
@@ -87,7 +84,6 @@ const spanDynamicStyles = (hovered: boolean): React.CSSProperties => ({
     opacity: hovered ? 0 : 1,
 });
 
-// Submit Button base style
 const submitButtonBase: React.CSSProperties = {
     fontSize: '18px',
     display: 'inline-block',
@@ -103,26 +99,22 @@ const submitButtonBase: React.CSSProperties = {
     transition: 'box-shadow 0.15s ease, transform 0.15s ease',
 };
 
-// Hover style
 const submitButtonHover: React.CSSProperties = {
     boxShadow: `0px 0.1em 0.2em rgb(45 35 66 / 40%),
               0px 0.4em 0.7em -0.1em rgb(45 35 66 / 30%), inset 0px -0.1em 0px #831238`,
     transform: 'translateY(-0.2em)',
 };
 
-// Active style
 const submitButtonActive: React.CSSProperties = {
     boxShadow: 'inset 0px 0.1em 0.6em #831238',
     transform: 'translateY(0em)',
 };
 
-// Disabled style
 const submitButtonDisabled: React.CSSProperties = {
     cursor: 'not-allowed',
     opacity: 0.6,
 };
 
-// Enhanced Dropdown Styles
 const enhancedDropdownStyles = {
     container: {
         position: 'relative' as 'relative',
@@ -148,7 +140,6 @@ const enhancedDropdownStyles = {
         cursor: 'pointer',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         appearance: 'none' as 'none',
-        // backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23${THEME_PRIMARY.substring(1)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'right 1rem center',
         backgroundSize: '1rem 1rem',
@@ -178,84 +169,108 @@ const enhancedDropdownStyles = {
     }
 };
 
-// Enhanced Modal Styles
+// --- MODIFIED: Enhanced Modal Styles ---
 const enhancedModalStyles = {
     overlay: {
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
     },
     modal: {
-        border: 'none',
-        borderRadius: '20px',
-        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
-        overflow: 'hidden' as 'hidden',
+        border: '1px solid rgba(0, 0, 0, 0.05)',
+        borderRadius: '16px',
+        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
+        background: '#ffffff',
     },
     header: {
-        backgroundColor: THEME_SECONDARY,
-        color: 'white',
-        borderBottom: 'none',
-        padding: '1.5rem 2rem',
-        position: 'relative' as 'relative',
+        backgroundColor: '#f8f9fa',
+        borderBottom: '1px solid #e9ecef',
+        color: '#212529',
+        padding: '1rem 1.5rem',
     },
     body: {
-        padding: '2rem',
+        padding: '2rem 1.5rem',
         textAlign: 'center' as 'center',
     },
     footer: {
-        borderTop: 'none',
-        padding: '1.5rem 2rem',
-        justifyContent: 'center' as 'center',
+        borderTop: '1px solid #e9ecef',
+        padding: '1rem 1.5rem',
+        justifyContent: 'flex-end' as 'flex-end',
+        backgroundColor: '#f8f9fa',
+    },
+    iconWrapper: {
+        width: '70px',
+        height: '70px',
+        borderRadius: '50%',
+        margin: '0 auto 1.5rem auto',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    successIconWrapper: {
+        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+    },
+    warningIconWrapper: {
+        backgroundColor: `rgba(158, 28, 63, 0.1)`,
     },
     successIcon: {
-        fontSize: '4rem',
+        fontSize: '2.5rem',
         color: '#28a745',
-        marginBottom: '1rem',
+    },
+    warningIcon: {
+        fontSize: '2.5rem',
+        color: THEME_PRIMARY,
     },
     progressBar: {
         height: '8px',
-        borderRadius: '10px',
+        borderRadius: '8px',
         backgroundColor: '#e9ecef',
         overflow: 'hidden' as 'hidden',
-        marginTop: '1rem',
+        marginTop: '1.5rem',
     },
     progressFill: {
         height: '100%',
-        backgroundColor: '#28a745',
-        transition: 'width 1s linear',
+        background: `linear-gradient(90deg, #28a745, #21c977)`,
+        transition: 'width 0.5s ease-in-out',
+        borderRadius: '8px',
     },
-    decoration: {
-        position: 'absolute' as 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '4px',
-        background: `linear-gradient(90deg, ${THEME_PRIMARY}, ${THEME_SECONDARY}, ${THEME_PRIMARY})`,
-    }
+    title: {
+        fontSize: '1.2rem',
+        fontWeight: '600',
+        margin: 0,
+    },
+    subtitle: {
+        fontSize: '1.25rem',
+        fontWeight: '600',
+        color: '#343a40',
+        marginBottom: '0.5rem',
+    },
+    text: {
+        fontSize: '1rem',
+        color: '#6c757d',
+        lineHeight: '1.6',
+        marginBottom: '1rem',
+    },
+    cancelButton: {
+        padding: '0.6rem 1.5rem',
+        borderRadius: '8px',
+        fontWeight: '600',
+        fontSize: '0.95rem',
+        transition: 'all 0.2s ease',
+    },
+    confirmButton: {
+        background: `linear-gradient(135deg, ${THEME_PRIMARY} 0%, ${THEME_SECONDARY} 100%)`,
+        border: 'none',
+        padding: '0.6rem 1.5rem',
+        borderRadius: '8px',
+        fontWeight: '600',
+        fontSize: '0.95rem',
+        boxShadow: `0 4px 12px rgba(158, 28, 63, 0.25)`,
+        transition: 'all 0.2s ease',
+        color: 'white',
+    },
 };
-
-// Interface definitions
-interface ExamData {
-    id: string;
-    name: string;
-    time: number;
-    department: string;
-    section: string;
-    year: string;
-}
-
-interface StudentData {
-    registerNumber: string;
-    userName: string;
-    department: string;
-    section: string;
-    year: string;
-}
-
-interface CodeExecutionResult {
-    output?: string;
-    error?: string;
-}
+// --- END OF MODIFICATION ---
 
 interface MessageState {
     id: string;
@@ -265,8 +280,7 @@ interface MessageState {
 }
 
 const CodeCompiler: React.FC = () => {
-    // State management
-    const [code, setCode] = useState<string>('// Write your code here');
+    const [code, setCode] = useState<string>('// Write your JavaScript code here\nconsole.log("Hello, World!");');
     const [language, setLanguage] = useState<string>('javascript');
     const [terminalContent, setTerminalContent] = useState<string>('');
     const [isTerminalCollapsed, setIsTerminalCollapsed] = useState<boolean>(false);
@@ -284,13 +298,11 @@ const CodeCompiler: React.FC = () => {
     const [error, setError] = useState<string>('');
     const [messages, setMessages] = useState<MessageState[]>([]);
 
-    // Hover states for custom buttons
     const [isRunHovered, setIsRunHovered] = useState(false);
     const [isSubmitHovered, setIsSubmitHovered] = useState(false);
     const [isDropdownHovered, setIsDropdownHovered] = useState(false);
     const [isDropdownFocused, setIsDropdownFocused] = useState(false);
 
-    // Animation states for modals
     const [modalVisible, setModalVisible] = useState(false);
     const [successModalVisible, setSuccessModalVisible] = useState(false);
 
@@ -298,7 +310,6 @@ const CodeCompiler: React.FC = () => {
     const terminalRef = useRef<HTMLDivElement>(null);
     const dropdownRef = useRef<HTMLSelectElement>(null);
 
-    // Modal animation effects
     useEffect(() => {
         if (showConfirmation) {
             setTimeout(() => setModalVisible(true), 10);
@@ -315,19 +326,18 @@ const CodeCompiler: React.FC = () => {
         }
     }, [showCountdown]);
 
-    // Initialization and timer effects (keep your existing useEffect hooks)
     useEffect(() => {
         const token = getToken();
 
         if (!token) {
-            setError('Please login first. Redirecting to login page...');
+            setError('Please login first.');
             setTimeout(() => {
                 window.location.href = '/';
             }, 2000);
             return;
         }
 
-        fetchExamData(token);
+        fetchExamData();
         initializeTerminal();
 
         const submitTimer = setTimeout(() => {
@@ -346,10 +356,9 @@ const CodeCompiler: React.FC = () => {
                 setCountdown(countdown - 1);
             }, 1000);
 
-            if (countdown === 0) {
-                handleWindowClose();
-            }
             return () => clearTimeout(timer);
+        } else if (showCountdown && countdown === 0) {
+            handleWindowClose();
         }
     }, [showCountdown, countdown]);
 
@@ -359,7 +368,28 @@ const CodeCompiler: React.FC = () => {
         }
     }, [terminalContent]);
 
-    // Your existing handler functions (keep them as they are)
+    const ensureTerminalVisible = () => {
+        if (isTerminalCollapsed) {
+            setIsTerminalCollapsed(false);
+        }
+
+        setTimeout(() => {
+            if (terminalRef.current) {
+                terminalRef.current.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'end'
+                });
+            }
+
+            setTimeout(() => {
+                window.scrollTo({
+                    top: document.documentElement.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }, 200);
+        }, 150);
+    };
+
     const showMessage = (text: string, type: 'success' | 'error' | 'info', duration?: number) => {
         const id = Date.now().toString();
         setMessages(prev => [...prev, { id, text, type, duration }]);
@@ -369,44 +399,17 @@ const CodeCompiler: React.FC = () => {
         setMessages(prev => prev.filter(msg => msg.id !== id));
     };
 
-    const handleWindowClose = () => {
-        try {
-            removeToken();
-            window.close();
-        } catch (e) {
-            console.error('Error closing the window:', e);
-        }
-    };
-
-    const fetchExamData = async (token: string) => {
+    const fetchExamData = async () => {
         try {
             setLoading(true);
-            const response = await fetch('http://localhost:5000/api/code/getdata', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            const response = await codeCompilerService.fetchExamData();
 
-            if (!response.ok) {
-                if (response.status === 401) {
-                    removeToken();
-                    setError('Session expired. Please login again.');
-                    setTimeout(() => { window.location.href = '/login'; }, 2000);
-                    return;
-                }
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            if (response.success) {
+                setExamData(response.data.exam);
+                setStudentData(response.data.student);
+                setAssignedQuestion(response.data.assignedQuestion);
 
-            const data = await response.json();
-
-            if (data.success) {
-                setExamData(data.data.exam);
-                setStudentData(data.data.student);
-                setAssignedQuestion(data.data.assignedQuestion);
-
-                const examDurationMinutes = data.data.exam.time;
+                const examDurationMinutes = response.data.exam.time;
                 setRemainingTime(examDurationMinutes * 60);
 
                 const timerInterval = setInterval(() => {
@@ -420,60 +423,45 @@ const CodeCompiler: React.FC = () => {
                     });
                 }, 1000);
 
-                showMessage('Exam data loaded successfully!', 'success');
             } else {
-                setError(data.message || 'Failed to fetch exam data');
-                showMessage(data.message || 'Failed to fetch exam data', 'error');
+                setError(response.message || 'Failed to fetch exam data');
+                showMessage(response.message || 'Failed to fetch exam data', 'error');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error fetching exam details:', error);
-            setError('Failed to fetch exam details. Please try again.');
-            showMessage('Failed to fetch exam details. Please try again.', 'error');
+            const errorMessage = error.message || 'Failed to fetch exam details. Please try again.';
+            setError(errorMessage);
+            showMessage(errorMessage, 'error');
         } finally {
             setLoading(false);
         }
     };
 
     const initializeTerminal = () => {
-        const welcomeMessage = `SecureExam Terminal\n\n`;
+        const welcomeMessage = `SecureExam Terminal - Ready for JavaScript\n\n`;
         setTerminalContent(welcomeMessage);
     };
 
-    const handleRunCode = async () => {
+    const handleRunCode = async (): Promise<void> => {
         setIsProcessing(true);
         appendToTerminal(`Running ${language} code...\n`, 'output');
+        ensureTerminalVisible();
 
         try {
-            const token = getToken();
-            if (!token) {
-                appendToTerminal('Error: No authentication token found. Please login again.\n', 'error');
-                showMessage('Authentication token not found', 'error');
-                return;
-            }
+            const result: CodeExecutionResult = await codeCompilerService.executeCode(language, code);
 
-            const response = await fetch('https://securexam.in/api/run-code', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ language, code }),
-            });
-
-            const result: CodeExecutionResult = await response.json();
-
-            if (result.output) {
-                appendToTerminal(result.output.trim() + '\n', 'output');
+            if (result.success && result.output) {
+                appendToTerminal(result.output + '\n', 'output');
                 showMessage('Code executed successfully!', 'success');
             } else if (result.error) {
-                appendToTerminal(result.error.trim() + '\n', 'error');
+                appendToTerminal(result.error + '\n', 'error');
                 showMessage('Code execution failed', 'error');
             } else {
                 appendToTerminal('Execution finished with no output.\n', 'output');
                 showMessage('Execution completed with no output', 'info');
             }
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        } catch (error: any) {
+            const errorMessage = error.message || 'Unknown error occurred';
             appendToTerminal(`Error: ${errorMessage}\n`, 'error');
             showMessage('Error executing code', 'error');
         } finally {
@@ -505,41 +493,44 @@ const CodeCompiler: React.FC = () => {
 
     const handleSubmitCode = async () => {
         try {
-            const token = getToken();
-            if (!token) {
-                window.location.href = '/login';
-                return;
-            }
+            const result: SubmissionResponse = await codeCompilerService.submitCode(language, code, assignedQuestion);
 
-            const response = await fetch('https://securexam.in/api/code/submit', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    language,
-                    code,
-                    assignedQuestion,
-                }),
-            });
+            if (result.success) {
+                showMessage('Code submitted successfully!', 'success');
 
-            const result = await response.json();
-
-            if (result.message === 'Code saved successfully') {
                 setShowConfirmation(false);
                 setShowCountdown(true);
                 setCountdown(10);
 
                 setTimeout(() => {
                     removeToken();
+                    window.close();
                 }, 10000);
             } else {
-                showMessage('Failed to save code. Please try again.', 'error');
+                showMessage(result.message || 'Failed to save code. Please try again.', 'error');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error submitting code:', error);
-            showMessage('An error occurred while saving your code.', 'error');
+            const errorMessage = error.message || 'An error occurred while saving your code.';
+            showMessage(errorMessage, 'error');
+        }
+    };
+
+    const handleWindowClose = () => {
+        try {
+            removeToken();
+            if (window.opener) {
+                window.close();
+            } else {
+                window.open('', '_self', '');
+                window.close();
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1000);
+            }
+        } catch (e) {
+            console.error('Error closing the window:', e);
+            window.location.href = '/';
         }
     };
 
@@ -564,7 +555,6 @@ const CodeCompiler: React.FC = () => {
         editorRef.current = editor;
     };
 
-    // Loading and Error Screens (keep your existing code)
     if (loading) {
         return (
             <>
@@ -593,10 +583,8 @@ const CodeCompiler: React.FC = () => {
 
     return (
         <div className="secure-exam-compiler" style={{ backgroundColor: THEME_BG, minHeight: '100vh' }}>
-            {/* Custom Header (Static) */}
             <Header />
 
-            {/* Messages */}
             {messages.map((message) => (
                 <Message
                     key={message.id}
@@ -608,10 +596,8 @@ const CodeCompiler: React.FC = () => {
                 />
             ))}
 
-            {/* Main Content Area */}
             <Container fluid className="py-3 h-100">
                 <Row className="g-3">
-                    {/* Left Column: Problem Statement */}
                     <div
                         style={{
                             ...customStyles.problemArea,
@@ -626,7 +612,6 @@ const CodeCompiler: React.FC = () => {
                             padding: "1rem 1.25rem",
                         }}
                     >
-                        {/* Student Info Header */}
                         {studentData && (
                             <div
                                 style={{
@@ -648,7 +633,6 @@ const CodeCompiler: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Exam Title and Timer */}
                         <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-1">
                             <h4 className="mb-0 fw-bold" style={{ color: THEME_SECONDARY }}>
                                 <i className="fas fa-book-open me-2"></i>
@@ -671,7 +655,6 @@ const CodeCompiler: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Question Section */}
                         <h5 className="text-dark mt-3 mb-2 fw-bold">Question:</h5>
                         <div
                             style={{
@@ -694,7 +677,6 @@ const CodeCompiler: React.FC = () => {
                             )}
                         </div>
 
-                        {/* Input Format */}
                         <h6 className="mt-4 text-dark fw-bold">Input Format:</h6>
                         <Alert
                             variant="light"
@@ -712,7 +694,6 @@ const CodeCompiler: React.FC = () => {
                             unexpected input-related errors.
                         </Alert>
 
-                        {/* Output Format */}
                         <h6 className="mt-4 text-dark fw-bold">Output Format:</h6>
                         <Alert
                             variant="light"
@@ -730,7 +711,6 @@ const CodeCompiler: React.FC = () => {
                             from the expected output format may result in incorrect evaluation.
                         </Alert>
 
-                        {/* Note Section */}
                         <Alert
                             variant="light"
                             className="mt-4 shadow-sm"
@@ -754,13 +734,10 @@ const CodeCompiler: React.FC = () => {
                         </Alert>
                     </div>
 
-                    {/* Right Column: Code Editor, Control Bar & Terminal */}
                     <Col md={7} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                        {/* Control Bar */}
                         <Card className="shadow-lg border-0 mb-3">
                             <Card.Body className="p-3">
                                 <div className="d-flex align-items-center justify-content-between flex-wrap">
-                                    {/* Enhanced Language Dropdown */}
                                     <div style={enhancedDropdownStyles.container}>
                                         <Form.Label style={enhancedDropdownStyles.label}>
                                             Change Language:
@@ -786,20 +763,9 @@ const CodeCompiler: React.FC = () => {
                                                 <option value="c">C</option>
                                                 <option value="cpp">C++</option>
                                             </Form.Select>
-                                            {/* <i
-                                                className="fas fa-chevron-down"
-                                                style={{
-                                                    ...enhancedDropdownStyles.icon,
-                                                    transform: isDropdownHovered || isDropdownFocused
-                                                        ? 'translateY(-50%) rotate(180deg)'  // arrow points up
-                                                        : 'translateY(-50%) rotate(0deg)',  // arrow points down
-                                                    transition: 'transform 0.3s ease',
-                                                }}
-                                            /> */}
                                         </div>
                                     </div>
 
-                                    {/* Buttons */}
                                     <div className="d-flex flex-grow-1 justify-content-center gap-3 mt-2 mt-md-0">
                                         <div id="run-button-container">
                                             <button
@@ -826,13 +792,12 @@ const CodeCompiler: React.FC = () => {
                                                 ...submitButtonBase,
                                                 ...(isSubmitHovered ? submitButtonHover : {}),
                                                 ...(isSubmitActive ? submitButtonActive : {}),
-                                                ...(!isSubmitEnabled ? submitButtonDisabled : {}),
+                                                // ...(!isSubmitEnabled ? submitButtonDisabled : {}),
                                             }}
                                             onMouseEnter={() => setIsSubmitHovered(true)}
                                             onMouseLeave={() => setIsSubmitHovered(false)}
                                             onMouseDown={() => setIsSubmitActive(true)}
                                             onMouseUp={() => setIsSubmitActive(false)}
-                                            disabled={!isSubmitEnabled}
                                             onClick={() => setShowConfirmation(true)}
                                         >
                                             SUBMIT EXAM
@@ -842,9 +807,7 @@ const CodeCompiler: React.FC = () => {
                             </Card.Body>
                         </Card>
 
-                        {/* Code Editor */}
                         <Card className="shadow-lg mb-4 border-0 rounded-3">
-                            {/* Editor Header */}
                             <Card.Header
                                 style={{
                                     backgroundColor: CODE_BG_DARK,
@@ -870,7 +833,6 @@ const CodeCompiler: React.FC = () => {
                                 </Badge>
                             </Card.Header>
 
-                            {/* Editor Body */}
                             <Card.Body
                                 className="p-0"
                                 style={{
@@ -904,9 +866,7 @@ const CodeCompiler: React.FC = () => {
                             </Card.Body>
                         </Card>
 
-                        {/* Terminal */}
                         <Card className="shadow-lg border-0 rounded">
-                            {/* Terminal Header */}
                             <Card.Header
                                 style={{
                                     backgroundColor: THEME_SECONDARY,
@@ -978,74 +938,58 @@ const CodeCompiler: React.FC = () => {
                 </Row>
             </Container>
 
-            {/* Enhanced Confirmation Modal */}
+            {/* --- MODIFIED: Enhanced Confirmation Modal --- */}
             <Modal
                 show={showConfirmation}
                 onHide={() => setShowConfirmation(false)}
                 centered
                 style={enhancedModalStyles.overlay}
-                dialogClassName="custom-modal-dialog"
             >
                 <div
                     style={{
                         ...enhancedModalStyles.modal,
                         opacity: modalVisible ? 1 : 0,
-                        transform: modalVisible ? 'scale(1) translateY(0)' : 'scale(0.8) translateY(-20px)',
+                        transform: modalVisible ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(-10px)',
                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     }}
                 >
-                    <div style={enhancedModalStyles.decoration}></div>
                     <Modal.Header style={enhancedModalStyles.header} closeButton>
-                        <Modal.Title>
-                            <i className="fas fa-exclamation-triangle me-2"></i>
+                        <Modal.Title style={enhancedModalStyles.title}>
+                            <i className="fas fa-exclamation-triangle me-2" style={{ color: THEME_PRIMARY }}></i>
                             Confirm Submission
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body style={enhancedModalStyles.body}>
-                        <div className="mb-3">
-                            <i className="fas fa-file-code" style={{ fontSize: '3rem', color: THEME_PRIMARY }}></i>
+                        <div style={{ ...enhancedModalStyles.iconWrapper, ...enhancedModalStyles.warningIconWrapper }}>
+                            <i className="fas fa-file-code" style={enhancedModalStyles.warningIcon}></i>
                         </div>
-                        <h5 style={{ color: THEME_SECONDARY, marginBottom: '1rem' }}>
-                            Ready to Submit?
+                        <h5 style={enhancedModalStyles.subtitle}>
+                            Ready to Submit Your Exam?
                         </h5>
-                        <p className="mb-3">
-                            Are you sure you want to finish and close the exam?
+                        <p style={enhancedModalStyles.text}>
+                            Please confirm that you want to finish and submit your exam. This action cannot be undone.
                         </p>
-                        <Alert variant="warning" className="small">
-                            <i className="fas fa-exclamation-circle me-2"></i>
-                            Once submitted, you cannot make any changes to your code.
-                        </Alert>
                     </Modal.Body>
                     <Modal.Footer style={enhancedModalStyles.footer}>
                         <Button
-                            variant="outline-secondary"
+                            variant="light"
                             onClick={() => setShowConfirmation(false)}
-                            style={{
-                                padding: '0.5rem 1.5rem',
-                                borderRadius: '8px',
-                                border: `2px solid #6c757d`,
-                            }}
+                            style={enhancedModalStyles.cancelButton}
                         >
                             Cancel
                         </Button>
                         <Button
-                            style={{
-                                backgroundColor: THEME_PRIMARY,
-                                borderColor: THEME_PRIMARY,
-                                padding: '0.5rem 1.5rem',
-                                borderRadius: '8px',
-                                border: '2px solid transparent',
-                            }}
+                            style={enhancedModalStyles.confirmButton}
                             onClick={handleSubmitCode}
                         >
                             <i className="fas fa-paper-plane me-2"></i>
-                            Yes, Submit Exam
+                            Yes, Submit
                         </Button>
                     </Modal.Footer>
                 </div>
             </Modal>
 
-            {/* Enhanced Success Modal */}
+            {/* --- MODIFIED: Enhanced Success Modal --- */}
             <Modal
                 show={showCountdown}
                 centered
@@ -1057,25 +1001,26 @@ const CodeCompiler: React.FC = () => {
                     style={{
                         ...enhancedModalStyles.modal,
                         opacity: successModalVisible ? 1 : 0,
-                        transform: successModalVisible ? 'scale(1) translateY(0)' : 'scale(0.8) translateY(-20px)',
+                        transform: successModalVisible ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(-10px)',
                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     }}
                 >
-                    <div style={enhancedModalStyles.decoration}></div>
                     <Modal.Body style={enhancedModalStyles.body}>
-                        <div className="mb-3">
+                        <div style={{ ...enhancedModalStyles.iconWrapper, ...enhancedModalStyles.successIconWrapper }}>
                             <i className="fas fa-check-circle" style={enhancedModalStyles.successIcon}></i>
                         </div>
-                        <h5 className="text-success mb-3">Exam Submitted Successfully!</h5>
-                        <p className="mb-2">Your code has been saved successfully.</p>
-                        <p className="mb-3">
-                            You can close the app in <strong style={{ color: THEME_SECONDARY }}>{countdown}</strong> seconds.
+                        <h5 style={{ ...enhancedModalStyles.subtitle, color: '#28a745' }}>
+                            Exam Submitted Successfully!
+                        </h5>
+                        <p style={enhancedModalStyles.text}>
+                            Your code has been saved. This window will automatically close in
+                            <strong style={{ color: THEME_SECONDARY, fontSize: '1.1rem' }}> {countdown} </strong> seconds.
                         </p>
                         <div style={enhancedModalStyles.progressBar}>
                             <div
                                 style={{
                                     ...enhancedModalStyles.progressFill,
-                                    width: `${(countdown / 10) * 100}%`
+                                    width: `${((10 - countdown) / 10) * 100}%`
                                 }}
                             ></div>
                         </div>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import Message from "../components/Message.tsx";
-import { login, type LoginData } from "../services/authService";
+import { login, type LoginData, handleLoginError, isLoginError } from "../services/authService";
 import { useNavigate } from "react-router-dom";
 import Loader from "../components/Loader.tsx";
 
@@ -59,7 +59,7 @@ const Login: React.FC = () => {
   const validationRules: ValidationRules = {
     registerNumber: {
       pattern: /^\d{8}$/,
-      message: "Please enter a valid Register number"
+      message: "Please enter a valid 8-digit Register number"
     },
     email: {
       pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
@@ -68,7 +68,7 @@ const Login: React.FC = () => {
     password: {
       minLength: 6,
       maxLength: 50,
-      message: "Password must be above 6 characters"
+      message: "Password must be at least 6 characters"
     }
   };
 
@@ -96,7 +96,7 @@ const Login: React.FC = () => {
   const validateField = (fieldName: string, value: string): string => {
     switch (fieldName) {
       case "userType":
-        return !value ? "Please select a user" : "";
+        return !value ? "Please select a user type" : "";
 
       case "registerNumber":
         if (!value.trim()) return "Register number is required";
@@ -114,8 +114,7 @@ const Login: React.FC = () => {
 
       case "password":
         if (!value.trim()) return "Password is required";
-        if (value.length < validationRules.password.minLength ||
-          value.length > validationRules.password.maxLength) {
+        if (value.length < validationRules.password.minLength) {
           return validationRules.password.message;
         }
         return "";
@@ -180,7 +179,6 @@ const Login: React.FC = () => {
   // Handle modal animation
   useEffect(() => {
     if (showSuccessModal) {
-      // Small delay to ensure the modal is in DOM before starting animation
       setTimeout(() => {
         setModalVisible(true);
       }, 10);
@@ -265,94 +263,28 @@ const Login: React.FC = () => {
     } catch (error: any) {
       setIsLoading(false);
 
-      console.log("Full error object:", error);
-      console.log("Error response:", error.response);
-      console.log("Error data:", error.response?.data);
-
-      // Extract error message from various possible locations
-      let errorMessage = "Login failed. Please try again.";
-
-      if (error.response) {
-        const responseData = error.response.data;
-
-        // Try different possible locations for the error message
-        if (typeof responseData === 'string') {
-          errorMessage = responseData;
-        } else if (responseData?.message) {
-          errorMessage = responseData.message;
-        } else if (responseData?.error) {
-          errorMessage = responseData.error;
-        } else if (responseData?.data?.message) {
-          errorMessage = responseData.data.message;
-        } else if (responseData?.statusText) {
-          errorMessage = responseData.statusText;
-        }
-
-        const status = error.response.status;
-
-        switch (status) {
-          case 400:
-            if (errorMessage.toLowerCase().includes("numeric") || errorMessage.toLowerCase().includes("register number")) {
-              errorMessage = "Register number must contain only numbers (8 digits required).";
-            } else if (errorMessage.toLowerCase().includes("email") || errorMessage.toLowerCase().includes("format")) {
-              errorMessage = "Please enter a valid email address.";
-            } else if (errorMessage.toLowerCase().includes("required") || errorMessage.toLowerCase().includes("fields")) {
-              errorMessage = "All fields are required. Please fill in all information.";
-            } else if (errorMessage.toLowerCase().includes("user type")) {
-              errorMessage = "Please select whether you are a student or staff.";
-            } else if (errorMessage.toLowerCase().includes("password") || errorMessage.toLowerCase().includes("6 characters")) {
-              errorMessage = "Password must be at least 6 characters long.";
-            }
-            break;
-
-          case 401:
-            if (errorMessage.toLowerCase().includes("not found") || errorMessage.toLowerCase().includes("student not found") || errorMessage.toLowerCase().includes("staff not found")) {
-              errorMessage = "Account not found. Please check your register number or email.";
-            } else if (errorMessage.toLowerCase().includes("invalid credentials") || errorMessage.toLowerCase().includes("wrong password")) {
-              errorMessage = "Invalid password. Please check your password and try again.";
-            } else {
-              errorMessage = "Invalid login credentials. Please check your details.";
-            }
-            break;
-
-          case 403:
-            errorMessage = "Access denied. Your account may be suspended or inactive.";
-            break;
-
-          case 404:
-            if (errorMessage.toLowerCase().includes("exam") || errorMessage.toLowerCase().includes("no exam")) {
-              errorMessage = "No exams available for your department/section at this time.";
-            } else if (errorMessage.toLowerCase().includes("question") || errorMessage.toLowerCase().includes("no question")) {
-              errorMessage = "No questions available for your exam. Please contact administrator.";
-            } else if (errorMessage.toLowerCase().includes("profile") || errorMessage.toLowerCase().includes("incomplete")) {
-              errorMessage = "Your student profile is incomplete. Please contact administration.";
-            } else {
-              errorMessage = "Requested resource not found. Please try again later.";
-            }
-            break;
-
-          case 429:
-            errorMessage = "Too many login attempts. Please wait a few minutes and try again.";
-            break;
-
-          case 500:
-            errorMessage = "Server error. Please try again in a few moments.";
-            break;
-
-          default:
-            // Keep the extracted errorMessage
-            break;
-        }
-      } else if (error.request) {
-        // Network error - no response received
-        errorMessage = "Unable to connect to server. Please check your internet connection and try again.";
+      // Use the enhanced error handling from authService
+      const errorInfo = handleLoginError(error);
+      
+      // Log detailed error for debugging
+      if (isLoginError(error)) {
+        console.error('Login error details:', {
+          statusCode: error.statusCode,
+          userMessage: error.userMessage,
+          originalError: error.originalError
+        });
       } else {
-        // Other errors (axios config errors, etc.)
-        errorMessage = error.message || "An unexpected error occurred. Please try again.";
+        console.error('Login error:', {
+          name: error.name,
+          message: error.message,
+          response: error.response?.data
+        });
       }
 
-      displayMessage(errorMessage, "error");
+      // Display user-friendly error message
+      displayMessage(errorInfo.message, "error");
 
+      // Clear password field for security
       if (userType === "student") {
         setPassword("");
       }
@@ -430,14 +362,17 @@ const Login: React.FC = () => {
       backgroundColor: "white", 
       outline: "none", 
       boxShadow: "none", 
-      transition: "none" 
+      transition: "border-color 0.3s ease" 
     },
     inputError: { 
-      border: "1px solid #d32f2f", 
+      border: "2px solid #d32f2f", 
       backgroundColor: "#fff5f5", 
       outline: "none", 
-      boxShadow: "none", 
-      transition: "none" 
+      boxShadow: "none" 
+    },
+    inputFocus: {
+      border: "2px solid #831238",
+      boxShadow: "0 0 0 3px rgba(131, 18, 56, 0.1)"
     },
     select: { 
       width: "60%", 
@@ -456,29 +391,41 @@ const Login: React.FC = () => {
       backgroundSize: "12px", 
       outline: "none", 
       boxShadow: "none", 
-      transition: "none" 
+      transition: "border-color 0.3s ease" 
     },
     selectError: { 
-      border: "1px solid #d32f2f", 
+      border: "2px solid #d32f2f", 
       backgroundColor: "#fff5f5", 
       outline: "none", 
-      boxShadow: "none", 
-      transition: "none" 
+      boxShadow: "none" 
+    },
+    selectFocus: {
+      border: "2px solid #831238",
+      boxShadow: "0 0 0 3px rgba(131, 18, 56, 0.1)"
     },
     button: { 
-      backgroundColor: hovered ? "#9e1c3f" : "#831238", 
+      background: "linear-gradient(45deg, #831238, #9e1c3f)", 
       color: "white", 
-      padding: "0.75rem", 
+      padding: "0.75rem 2rem", 
       border: "none", 
       borderRadius: "10px", 
       marginTop: "30px", 
       width: "45%", 
       cursor: "pointer", 
-      fontWeight: "bold" 
+      fontWeight: "bold",
+      fontSize: "1rem",
+      transition: "all 0.3s ease",
+      boxShadow: "0 4px 15px rgba(131, 18, 56, 0.3)"
+    },
+    buttonHover: {
+      transform: "translateY(-2px)",
+      boxShadow: "0 6px 20px rgba(131, 18, 56, 0.4)"
     },
     buttonDisabled: { 
-      backgroundColor: "#cccccc", 
-      cursor: "not-allowed" 
+      background: "#cccccc", 
+      cursor: "not-allowed",
+      transform: "none",
+      boxShadow: "none"
     },
     errorText: { 
       color: "#d32f2f", 
@@ -486,7 +433,8 @@ const Login: React.FC = () => {
       marginTop: "0.25rem", 
       textAlign: "left" as "left", 
       width: "70%", 
-      margin: "0 auto" 
+      margin: "0 auto",
+      fontWeight: "500"
     },
     customModalOverlay: {
       display: showSuccessModal ? "flex" : "none",
@@ -506,88 +454,77 @@ const Login: React.FC = () => {
     },
     customModal: {
       backgroundColor: "white",
-      borderRadius: "20px",
-      boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
-      padding: "30px",
+      borderRadius: "16px",
+      boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
+      padding: "2rem",
       width: "90%",
       maxWidth: "500px",
       textAlign: "center" as "center",
-      transform: modalVisible ? "scale(1) translateY(0)" : "scale(0.7) translateY(-50px)",
+      transform: modalVisible ? "scale(1) translateY(0)" : "scale(0.9) translateY(-20px)",
       opacity: modalVisible ? 1 : 0,
-      transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-      border: "2px solid #831238",
-      position: "relative" as "relative",
-      overflow: "hidden"
+      transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease",
+      border: "1px solid rgba(0,0,0,0.05)",
     },
-    customModalContent: {
-      backgroundColor: "#f9f9f9",
-      color: "#333",
-      padding: "25px",
-      borderRadius: "15px",
-      textAlign: "center" as "center",
-      border: "2px solid #ddd",
-      boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-      display: "flex",
-      flexDirection: "column" as "column",
-      alignItems: "center",
-      gap: "15px"
+    modalIcon: {
+        width: "60px",
+        height: "60px",
+        borderRadius: "50%",
+        backgroundColor: "rgba(131, 18, 56, 0.1)",
+        color: "#831238",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "2rem",
+        margin: "0 auto 1.5rem auto",
     },
     modalHeader: {
-      color: "#831238",
-      fontSize: "28px",
-      fontWeight: "bold",
-      marginBottom: "10px",
-      textShadow: "1px 1px 2px rgba(0,0,0,0.1)"
+      color: "#333",
+      fontSize: "1.5rem",
+      fontWeight: "700",
+      marginBottom: "0.75rem",
     },
     modalList: {
       textAlign: "left" as "left",
-      fontSize: "16px",
-      lineHeight: "1.6",
-      paddingLeft: "20px",
-      margin: "15px 0"
+      fontSize: "0.95rem",
+      lineHeight: "1.8",
+      paddingLeft: "0",
+      listStyle: "none",
+      margin: "1.5rem 0",
+      color: "#555"
+    },
+    modalListItem: {
+        display: "flex",
+        alignItems: "center",
+        marginBottom: "0.5rem",
+    },
+    listItemIcon: {
+        color: "#831238",
+        marginRight: "0.75rem",
+        fontSize: "1rem",
     },
     countdownText: {
-      fontSize: "18px",
-      fontWeight: "bold",
-      color: "#831238",
-      margin: "10px 0",
-      padding: "8px 15px",
-      backgroundColor: "#fff0f5",
-      borderRadius: "10px",
-      display: "inline-block"
+      fontSize: "1rem",
+      fontWeight: "500",
+      color: "#6c757d",
+      margin: "1rem 0",
     },
-    cssbuttonsIoButton: {
+    startButton: {
       background: "linear-gradient(45deg, #831238, #9e1c3f)",
       color: "white",
       fontFamily: "inherit",
-      padding: "0.8em 1.5em",
-      fontSize: "18px",
+      padding: "0.8rem 2rem",
+      fontSize: "1rem",
       fontWeight: 600,
       borderRadius: "12px",
       border: "none",
-      display: "flex",
-      alignItems: "center",
-      boxShadow: "0 5px 15px rgba(131, 18, 56, 0.4)",
-      overflow: "hidden",
-      position: "relative" as "relative",
-      height: "3em",
       cursor: "pointer",
-      marginTop: "15px",
-      transition: "all 0.3s ease",
-      transform: "translateY(0)"
+      marginTop: "1rem",
+      transition: "transform 0.2s ease, box-shadow 0.2s ease",
+      boxShadow: "0 4px 15px rgba(131, 18, 56, 0.2)",
     },
-    cssbuttonsIoButtonHover: {
+    startButtonHover: {
       transform: "translateY(-2px)",
-      boxShadow: "0 8px 20px rgba(131, 18, 56, 0.6)"
-    },
-    modalDecoration: {
-      position: "absolute" as "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      height: "5px",
-      background: "linear-gradient(90deg, #831238, #9e1c3f, #831238)",
-      borderRadius: "20px 20px 0 0"
+      boxShadow: "0 7px 20px rgba(131, 18, 56, 0.3)"
     }
   };
 
@@ -711,6 +648,7 @@ const Login: React.FC = () => {
               type="submit"
               style={{
                 ...styles.button,
+                ...(hovered ? styles.buttonHover : {}),
                 ...(!isFormValid || isLoading ? styles.buttonDisabled : {}),
               }}
               onMouseEnter={() => setHovered(true)}
@@ -723,7 +661,6 @@ const Login: React.FC = () => {
         </div>
       </div>
 
-      {/* Student modal overlay */}
       <div 
         style={styles.customModalOverlay}
         onClick={(e) => {
@@ -737,32 +674,32 @@ const Login: React.FC = () => {
           ref={modalRef}
           style={styles.customModal}
         >
-          <div style={styles.modalDecoration}></div>
-          <div style={styles.customModalContent}>
-            <h2 style={styles.modalHeader}>Welcome to the Exam!</h2>
-            <ul style={styles.modalList}>
-              <li>Exam will start when timer ends.</li>
-              <li>Finish button ends exam automatically.</li>
-              <li>No multiple logins allowed.</li>
-              <li>Severe action for malpractice.</li>
-            </ul>
-            {countdown > 0 && (
-              <p style={styles.countdownText}>
-                Exam is Starting in {countdown} second{countdown !== 1 ? 's' : ''}!
-              </p>
-            )}
-            <button 
-              style={{
-                ...styles.cssbuttonsIoButton,
-                ...(hovered ? styles.cssbuttonsIoButtonHover : {})
-              }} 
-              onClick={handleStartExam}
-              onMouseEnter={() => setHovered(true)}
-              onMouseLeave={() => setHovered(false)}
-            >
-              Get Started
-            </button>
+          <div style={styles.modalIcon}>
+            <i className="fas fa-book-open"></i>
           </div>
+          <h2 style={styles.modalHeader}>Exam Instructions</h2>
+          <ul style={styles.modalList}>
+            <li style={styles.modalListItem}><i className="fas fa-check" style={styles.listItemIcon}></i>Exam starts automatically when the timer ends.</li>
+            <li style={styles.modalListItem}><i className="fas fa-check" style={styles.listItemIcon}></i>The exam will end upon clicking the 'Finish' button.</li>
+            <li style={styles.modalListItem}><i className="fas fa-check" style={styles.listItemIcon}></i>Multiple logins are not permitted.</li>
+            <li style={styles.modalListItem}><i className="fas fa-check" style={styles.listItemIcon}></i>Strict action will be taken for any malpractice.</li>
+          </ul>
+          {countdown > 0 && (
+            <p style={styles.countdownText}>
+              The exam will begin automatically in <strong>{countdown}</strong> second{countdown !== 1 ? 's' : ''}.
+            </p>
+          )}
+          <button 
+            style={{
+              ...styles.startButton,
+              ...(hovered ? styles.startButtonHover : {})
+            }} 
+            onClick={handleStartExam}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+          >
+            Start Exam Now
+          </button>
         </div>
       </div>
 

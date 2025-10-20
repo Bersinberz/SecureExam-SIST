@@ -9,7 +9,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     let { identifier, password, userType } = req.body;
 
-    // Validate request body exists
     if (!req.body || Object.keys(req.body).length === 0) {
       res.status(400).json({ 
         success: false,
@@ -18,12 +17,10 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Sanitize inputs
     if (typeof identifier === "string") identifier = identifier.trim();
     if (typeof password === "string") password = password.trim();
     if (typeof userType === "string") userType = userType.trim().toLowerCase();
 
-    // Validate required fields
     if (!identifier || !password || !userType) {
       res.status(400).json({ 
         success: false,
@@ -32,7 +29,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Validate data types
     if (typeof identifier !== "string" || typeof password !== "string" || typeof userType !== "string") {
       res.status(400).json({ 
         success: false,
@@ -41,7 +37,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Validate user type
     if (!["student", "staff"].includes(userType)) {
       res.status(400).json({ 
         success: false,
@@ -50,7 +45,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Validate password length
     if (password.length < 6) {
       res.status(400).json({ 
         success: false,
@@ -59,7 +53,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Route to appropriate login handler
     if (userType === "student") {
       await handleStudentLogin(identifier, password, res);
     } else {
@@ -77,10 +70,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 // ------------------ STUDENT LOGIN ------------------
 const handleStudentLogin = async (identifier: string, password: string, res: Response) => {
   try {
-    // Convert identifier to register number
     const registerNumber = parseInt(identifier, 10);
     
-    // Validate register number format
     if (isNaN(registerNumber) || identifier.length !== 8) {
       res.status(400).json({ 
         success: false,
@@ -89,7 +80,6 @@ const handleStudentLogin = async (identifier: string, password: string, res: Res
       return;
     }
 
-    // Find student by register number
     const student = await Student.findOne({ registerNumber });
     if (!student) {
       res.status(401).json({ 
@@ -99,7 +89,6 @@ const handleStudentLogin = async (identifier: string, password: string, res: Res
       return;
     }
 
-    // Verify password
     if (student.password !== password) {
       res.status(401).json({ 
         success: false,
@@ -108,7 +97,6 @@ const handleStudentLogin = async (identifier: string, password: string, res: Res
       return;
     }
 
-    // Check if student has department, section, and year
     if (!student.department || !student.section || !student.year) {
       res.status(400).json({ 
         success: false,
@@ -117,7 +105,6 @@ const handleStudentLogin = async (identifier: string, password: string, res: Res
       return;
     }
 
-    // Check if exams exist for student's department, section, and year
     const exams = await ExamModel.find({ 
       department: student.department, 
       section: student.section,
@@ -132,10 +119,8 @@ const handleStudentLogin = async (identifier: string, password: string, res: Res
       return;
     }
 
-    // Select the first matching exam
     const currentExam = exams[0];
     
-    // Check if exam has questions
     if (!currentExam.questions || currentExam.questions.length === 0) {
       res.status(404).json({ 
         success: false,
@@ -144,11 +129,9 @@ const handleStudentLogin = async (identifier: string, password: string, res: Res
       return;
     }
 
-    // Assign a random question from the exam
     const randomIndex = Math.floor(Math.random() * currentExam.questions.length);
     const assignedQuestion = currentExam.questions[randomIndex];
     
-    // Remove the assigned question from the exam's questions array
     await ExamModel.updateOne(
       { _id: currentExam._id },
       { 
@@ -158,7 +141,6 @@ const handleStudentLogin = async (identifier: string, password: string, res: Res
       }
     );
 
-    // Update student with the assigned question
     await Student.updateOne(
       { registerNumber }, 
       { 
@@ -168,7 +150,6 @@ const handleStudentLogin = async (identifier: string, password: string, res: Res
       }
     );
 
-    // Generate JWT token
     const token = createToken({
       userId: student._id.toString(),
       userType: "student",
@@ -197,7 +178,6 @@ const handleStudentLogin = async (identifier: string, password: string, res: Res
 // ------------------ STAFF LOGIN ------------------
 const handleStaffLogin = async (email: string, password: string, res: Response) => {
   try {
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       res.status(400).json({ 
@@ -207,7 +187,6 @@ const handleStaffLogin = async (email: string, password: string, res: Response) 
       return;
     }
 
-    // Find staff by email
     const staff = await Staff.findOne({ email: email.toLowerCase() });
     if (!staff) {
       res.status(404).json({ 
@@ -217,7 +196,6 @@ const handleStaffLogin = async (email: string, password: string, res: Response) 
       return;
     }
 
-    // Verify password
     if (staff.password !== password) {
       res.status(401).json({ 
         success: false, 
@@ -226,14 +204,12 @@ const handleStaffLogin = async (email: string, password: string, res: Response) 
       return;
     }
 
-    // Generate JWT token
     const token = createToken({
       userId: staff._id.toString(),
       userType: "staff",
       email: staff.email,
     });
 
-    // Send success response
     res.status(200).json({ 
       success: true,
       message: "Login successful!",
