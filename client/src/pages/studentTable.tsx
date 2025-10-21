@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
-import { getStudentsByFilter } from '../services/tableService';
+import { AuthenticationError, getStudentsByFilter, getUserFriendlyErrorMessage, NetworkError, NoStudentsFoundError, ServerError, StudentValidationError } from '../services/tableService';
 
 // Define the Student interface
 interface Student {
@@ -133,25 +133,55 @@ const ExamStudents: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     const [vivaChecked, setVivaChecked] = useState<{ [key: string]: boolean }>({});
+    const navigate = useNavigate();
 
-    // Fetch students
-    useEffect(() => {
-        const fetchStudents = async () => {
-            try {
-                setMessage(null);
-                const data = await getStudentsByFilter({ department, section, year });
-                setStudents(data);
-            } catch (err) {
-                console.error(err);
-                setMessage({ type: 'error', text: 'Failed to fetch students data' });
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchStudents();
-    }, [department, section, year]);
+// In your ExamStudents component, update the fetchStudents function:
+useEffect(() => {
+  const fetchStudents = async () => {
+    try {
+      setMessage(null);
+      setLoading(true);
+      console.log('Fetching students with filter:', { department, section, year });
+      
+      const data = await getStudentsByFilter({ department, section, year });
+      console.log('Students fetched successfully:', data.length, 'students');
+      setStudents(data);
+      
+    } catch (err) {
+      console.error('Error fetching students:', err);
+      
+      if (err instanceof AuthenticationError) {
+        setMessage({ type: 'error', text: 'Authentication failed. Please login again.' });
+        // Optional: redirect to login after a delay
+        setTimeout(() => navigate('/login'), 2000);
+      } else if (err instanceof NoStudentsFoundError) {
+        setMessage({ type: 'info', text: err.message });
+        setStudents([]); // Clear students array
+      } else if (err instanceof StudentValidationError) {
+        setMessage({ type: 'error', text: 'Invalid search criteria. Please check your inputs.' });
+      } else if (err instanceof NetworkError) {
+        setMessage({ type: 'error', text: 'Network connection issue. Please check your internet connection.' });
+      } else if (err instanceof ServerError) {
+        setMessage({ type: 'error', text: 'Server error occurred. Please try again later.' });
+      } else {
+        setMessage({ 
+          type: 'error', 
+          text: getUserFriendlyErrorMessage(err) || 'Failed to fetch students. Please try again.' 
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  if (department && section && year) {
+    fetchStudents();
+  } else {
+    setMessage({ type: 'error', text: 'Missing required filter parameters' });
+    setLoading(false);
+  }
+}, [department, section, year, navigate]);
 
-    // Debounce search
     useEffect(() => {
         const handler = setTimeout(() => setDebouncedSearch(searchQuery), 300);
         return () => clearTimeout(handler);
@@ -243,8 +273,6 @@ const ExamStudents: React.FC = () => {
                                                         <th className="px-4 py-3">Department</th>
                                                         <th className="text-center px-4 py-3">Section</th>
                                                         <th className="text-center px-4 py-3">Year</th>
-                                                        <th className="text-center px-4 py-3">Question</th>
-                                                        <th className="text-center px-4 py-3">Code</th>
                                                         <th className="text-center px-4 py-3">Viva</th>
                                                     </tr>
                                                 </thead>
@@ -264,17 +292,14 @@ const ExamStudents: React.FC = () => {
                                                                 <span className="text-dark">{student.department}</span>
                                                             </td>
                                                             <td className="text-center align-middle px-4 py-2">
-                                                                <span className="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-1">{student.section}</span>
+                                                                {/* MODIFIED: Removed badge */}
+                                                                <span className="text-dark">{student.section}</span>
                                                             </td>
                                                             <td className="text-center align-middle px-4 py-2">
-                                                                <span className="badge bg-primary-subtle text-primary-emphasis rounded-pill px-3 py-1"> {student.year} Year</span>
+                                                                {/* MODIFIED: Removed badge and adjusted text */}
+                                                                <span className="text-dark">{student.year} Year</span>
                                                             </td>
-                                                            <td className="text-center align-middle px-4 py-2">
-                                                                <span className="badge bg-primary-subtle text-primary-emphasis rounded-pill px-3 py-1">Year {student.year}</span>
-                                                            </td>
-                                                            <td className="text-center align-middle px-4 py-2">
-                                                                <span className="badge bg-primary-subtle text-primary-emphasis rounded-pill px-3 py-1">Year {student.year}</span>
-                                                            </td>
+                                                            {/* MODIFIED: Removed redundant "Question" and "Code" columns */}
                                                             <td className="text-center align-middle px-4 py-2">
                                                                 <input
                                                                     type="checkbox"

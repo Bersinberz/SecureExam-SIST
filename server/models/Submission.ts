@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ISubmission extends Document {
+    _id: mongoose.Types.ObjectId;
     registerNumber: string;
     userName: string;
     department: string;

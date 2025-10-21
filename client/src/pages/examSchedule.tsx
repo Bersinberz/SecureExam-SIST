@@ -4,7 +4,7 @@ import Message from "../components/Message.tsx";
 import Footer from '../components/Footer';
 import Header from '../components/Header.tsx';
 import Loader from '../components/Loader.tsx';
-import { createExam } from '../services/examService';
+import { AuthenticationError, createExam, ExamValidationError, FileUploadError, NetworkError, ServerError } from '../services/examService';
 
 interface ExamDetails {
     name: string;
@@ -249,35 +249,42 @@ const ExamSchedule: React.FC = () => {
 
             setIsStartingExam(false);
 
-            if (result.message.includes('successfully')) {
-                showMessage('Exam started successfully!', 'success');
-                navigate('/exam-students', {
-                    state: {
-                        department: examDetails.department,
-                        section: examDetails.section,
-                        year: examDetails.year
-                    }
-                });
+            // FIXED: Check for success properly
+            if (result.success) {
+                showMessage(result.message || 'Exam started successfully!', 'success');
+                setTimeout(() => {
+                    navigate('/exam-students', {
+                        state: {
+                            department: examDetails.department,
+                            section: examDetails.section,
+                            year: examDetails.year
+                        }
+                    });
+                }, 1500);
             } else {
-                showMessage(result.message, 'error');
+                showMessage(result.message || 'Failed to start exam', 'error');
             }
         } catch (error: any) {
             setIsStartingExam(false);
             console.error('Error:', error);
 
-            if (error.response?.status === 401) {
+            // FIXED: Handle different error types properly
+            if (error instanceof AuthenticationError) {
                 showMessage('Authentication failed. Please login again.', 'error');
                 navigate('/login');
-            } else if (error.response?.status === 400) {
-                showMessage('Invalid exam data. Please check your inputs.', 'error');
+            } else if (error instanceof ExamValidationError || error instanceof FileUploadError) {
+                showMessage(error.message || 'Invalid exam data. Please check your inputs.', 'error');
             } else if (error.response?.status === 413) {
                 showMessage('File too large. Please upload a smaller file.', 'error');
+            } else if (error instanceof NetworkError) {
+                showMessage('Network connection issue. Please check your internet connection.', 'error');
+            } else if (error instanceof ServerError) {
+                showMessage('Server error occurred. Please try again later.', 'error');
             } else {
                 showMessage(error.message || 'Failed to start exam. Please try again.', 'error');
             }
         }
     };
-
     // Updated Styles to match Login.tsx exactly
     const examDetailsStyles = {
         sectionTitle: { color: '#831238', marginBottom: '20px', fontSize: '1.4rem', fontWeight: 'bold' as 'bold' },

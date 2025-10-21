@@ -92,7 +92,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// CORS Configuration
+// CORS Configuration - Updated for WebSocket origins
 const corsOptions = {
   origin: [
     "http://localhost:5173",
@@ -394,14 +394,15 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 // --------------------
 // Graceful Shutdown Handler
 // --------------------
-let server: any;
+let runningServer: any;
 
 const gracefulShutdown = (signal: string) => {
   console.log(`\n📢 Received ${signal}. Starting graceful shutdown...`);
   logToFile(`Received ${signal}. Starting graceful shutdown...`, 'INFO');
   
-  if (server) {
-    server.close((err: any) => {
+  
+  if (runningServer) {
+    runningServer.close((err: any) => {
       if (err) {
         console.error('❌ Error during server close:', err);
         logErrorToFile('Error during server close', err);
@@ -410,7 +411,6 @@ const gracefulShutdown = (signal: string) => {
       
       console.log('✅ HTTP server closed.');
       console.log('✅ Graceful shutdown completed.');
-      logToFile('HTTP server closed. Graceful shutdown completed.', 'INFO');
       process.exit(0);
     });
 
@@ -453,9 +453,8 @@ const startServer = async () => {
     logToFile(`Environment: ${NODE_ENV}`, 'INFO');
     
     await connectMongoose();
-    
     return new Promise((resolve) => {
-      const runningServer = app.listen(PORT, () => {
+      const startedServer = app.listen(PORT, () => {
         // Console output (essential information)
         console.log('\n✨ ========================================');
         console.log(`   🌍 Server is live at http://localhost:${PORT}`);
@@ -475,7 +474,7 @@ const startServer = async () => {
         ].join('\n');
         
         logToFile(startupMessage, 'INFO');
-        resolve(runningServer);
+        resolve(startedServer);
       });
     });
   } catch (error) {
@@ -486,8 +485,8 @@ const startServer = async () => {
 };
 
 // Start the server
-startServer().then(runningServer => {
-  server = runningServer;
+startServer().then(startedServer => {
+  runningServer = startedServer;
 });
 
 export default app;
