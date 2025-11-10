@@ -332,7 +332,7 @@ const CodeCompiler: React.FC = () => {
         if (!token) {
             setError('Please login first.');
             setTimeout(() => {
-                window.location.href = '/';
+                window.location.href = '/login';
             }, 2000);
             return;
         }
@@ -438,13 +438,12 @@ const CodeCompiler: React.FC = () => {
     };
 
     const initializeTerminal = () => {
-        const welcomeMessage = `SecureExam Terminal - Ready for JavaScript\n\n`;
+        const welcomeMessage = `SecureExam Terminal\n\n`;
         setTerminalContent(welcomeMessage);
     };
 
     const handleRunCode = async (): Promise<void> => {
         setIsProcessing(true);
-        appendToTerminal(`Running ${language} code...\n`, 'output');
         ensureTerminalVisible();
 
         try {
@@ -452,7 +451,6 @@ const CodeCompiler: React.FC = () => {
 
             if (result.success && result.output) {
                 appendToTerminal(result.output + '\n', 'output');
-                showMessage('Code executed successfully!', 'success');
             } else if (result.error) {
                 appendToTerminal(result.error + '\n', 'error');
                 showMessage('Code execution failed', 'error');
@@ -496,7 +494,6 @@ const CodeCompiler: React.FC = () => {
             const result: SubmissionResponse = await codeCompilerService.submitCode(language, code, assignedQuestion);
 
             if (result.success) {
-                showMessage('Code submitted successfully!', 'success');
 
                 setShowConfirmation(false);
                 setShowCountdown(true);
@@ -542,7 +539,6 @@ const CodeCompiler: React.FC = () => {
     const handleClearTerminal = () => {
         setTerminalContent('');
         initializeTerminal();
-        showMessage('Terminal cleared', 'info', 2000);
     };
 
     const formatTime = (seconds: number): string => {
@@ -568,11 +564,32 @@ const CodeCompiler: React.FC = () => {
         return (
             <>
                 <Header />
-                <div className="d-flex justify-content-center align-items-center vh-100" style={{ backgroundColor: THEME_BG }}>
-                    <Alert style={{ backgroundColor: THEME_SECONDARY, color: 'white' }} className="text-center border-0 shadow-lg">
-                        <h4>Error</h4>
-                        <p>{error}</p>
-                        <Button style={{ backgroundColor: THEME_PRIMARY, borderColor: THEME_PRIMARY }} onClick={() => window.location.href = '/'}>
+                <div
+                    className="d-flex justify-content-center align-items-center vh-100"
+                    style={{ backgroundColor: THEME_BG }}
+                >
+                    <Alert
+                        style={{
+                            backgroundColor: THEME_SECONDARY,
+                            color: "white",
+                            padding: "2rem 2.5rem",
+                            borderRadius: "1rem",
+                        }}
+                        className="text-center border-0 shadow-lg w-75 w-md-50 w-lg-25"
+                    >
+                        <div className="mb-3">
+                            <i className="bi bi-exclamation-triangle-fill" style={{ fontSize: "2.5rem" }}></i>
+                        </div>
+
+                        <h3 className="fw-bold mb-3">Error</h3>
+
+                        <p className="mb-4">{error}</p>
+
+                        <Button
+                            className="px-4 py-2"
+                            style={{ backgroundColor: THEME_PRIMARY, borderColor: THEME_PRIMARY }}
+                            onClick={() => (window.location.href = "/")}
+                        >
                             Back to Login
                         </Button>
                     </Alert>
@@ -792,7 +809,7 @@ const CodeCompiler: React.FC = () => {
                                                 ...submitButtonBase,
                                                 ...(isSubmitHovered ? submitButtonHover : {}),
                                                 ...(isSubmitActive ? submitButtonActive : {}),
-                                                // ...(!isSubmitEnabled ? submitButtonDisabled : {}),
+                                                ...(!isSubmitEnabled ? submitButtonDisabled : {}),
                                             }}
                                             onMouseEnter={() => setIsSubmitHovered(true)}
                                             onMouseLeave={() => setIsSubmitHovered(false)}
