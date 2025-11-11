@@ -158,36 +158,36 @@ app.use(requestQueue);
 // Simple rate limiting middleware
 const rateLimitMap = new Map();
 
-app.use((req: Request, res: Response, next: NextFunction) => {
-  const ip = req.ip || req.connection.remoteAddress;
-  const now = Date.now();
-  const windowMs = 15 * 60 * 1000; // 15 minutes
-  const maxRequests = 100;
+// app.use((req: Request, res: Response, next: NextFunction) => {
+//   const ip = req.ip || req.connection.remoteAddress;
+//   const now = Date.now();
+//   const windowMs = 15 * 60 * 1000; // 15 minutes
+//   const maxRequests = 100;
 
-  if (!ip) return next();
+//   if (!ip) return next();
 
-  const requestData = rateLimitMap.get(ip) || { count: 0, startTime: now };
+//   const requestData = rateLimitMap.get(ip) || { count: 0, startTime: now };
   
-  if (now - requestData.startTime > windowMs) {
-    // Reset counter if window has passed
-    requestData.count = 1;
-    requestData.startTime = now;
-  } else {
-    requestData.count++;
-  }
+//   if (now - requestData.startTime > windowMs) {
+//     // Reset counter if window has passed
+//     requestData.count = 1;
+//     requestData.startTime = now;
+//   } else {
+//     requestData.count++;
+//   }
 
-  rateLimitMap.set(ip, requestData);
+//   rateLimitMap.set(ip, requestData);
 
-  if (requestData.count > maxRequests) {
-    logToFile(`Rate limit exceeded for IP: ${ip}`, 'WARN');
-    return res.status(429).json({
-      success: false,
-      message: 'Too many requests from this IP, please try again later.'
-    });
-  }
+//   if (requestData.count > maxRequests) {
+//     logToFile(`Rate limit exceeded for IP: ${ip}`, 'WARN');
+//     return res.status(429).json({
+//       success: false,
+//       message: 'Too many requests from this IP, please try again later.'
+//     });
+//   }
 
-  next();
-});
+//   next();
+// });
 
 // Special rate limiting for auth endpoints
 app.use("/api/auth/login", (req: Request, res: Response, next: NextFunction) => {

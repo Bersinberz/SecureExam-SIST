@@ -8,6 +8,7 @@ export interface StudentFilter {
   department: string;
   section: string;
   year: string;
+  examId?: string;
 }
 
 export interface Student {
@@ -26,12 +27,33 @@ export interface Student {
   };
 }
 
+export interface Submission {
+  _id: string;
+  registerNumber: string;
+  userName: string;
+  department: string;
+  section: string;
+  year: string;
+  assignedQuestion: string;
+  code: string;
+  language: string;
+  examId: string;
+  submittedAt: string;
+  status: 'submitted' | 'graded';
+}
+
 export interface StudentsResponse {
   success: boolean;
   message: string;
   data: Student[];
   total?: number;
   timestamp?: string;
+}
+
+export interface SubmissionResponse {
+  success: boolean;
+  message: string;
+  data: Submission;
 }
 
 export interface StudentValidationResult {
@@ -93,6 +115,51 @@ export class ServerError extends TableServiceError {
 export class NoStudentsFoundError extends TableServiceError {
   constructor(message: string = 'No students found', details?: string, originalError?: any) {
     super(message, 'NO_STUDENTS_FOUND', 404, details, originalError);
+  }
+}
+
+// --------------------
+// Submission Error Classes
+// --------------------
+export class SubmissionError extends TableServiceError {
+  constructor(message: string = 'Submission error occurred', code: string = 'SUBMISSION_ERROR', statusCode: number = 500, details?: string, originalError?: any) {
+    super(message, code, statusCode, details, originalError);
+  }
+}
+
+export class SubmissionNotFoundError extends SubmissionError {
+  constructor(message: string = 'Submission not found', details?: string, originalError?: any) {
+    super(message, 'SUBMISSION_NOT_FOUND', 404, details, originalError);
+  }
+}
+
+export class SubmissionFetchError extends SubmissionError {
+  constructor(message: string = 'Failed to fetch submission', details?: string, originalError?: any) {
+    super(message, 'SUBMISSION_FETCH_ERROR', 500, details, originalError);
+  }
+}
+
+// --------------------
+// Download Error Classes
+// --------------------
+export class DownloadError extends TableServiceError {
+  constructor(message: string = 'Download error occurred', code: string = 'DOWNLOAD_ERROR', statusCode: number = 500, details?: string, originalError?: any) {
+    super(message, code, statusCode, details);
+    this.originalError = originalError;
+  }
+}
+
+export class DownloadFailedError extends DownloadError {
+  constructor(message: string = 'Download failed', details?: string, originalError?: any) {
+    super(message, 'DOWNLOAD_FAILED', 500, details);
+    this.originalError = originalError;
+  }
+}
+
+export class NoSubmissionsFoundError extends DownloadError {
+  constructor(message: string = 'No submissions found for download', details?: string, originalError?: any) {
+    super(message, 'NO_SUBMISSIONS_FOUND', 404, details);
+    this.originalError = originalError;
   }
 }
 
@@ -180,6 +247,46 @@ export const validateStudentData = (student: Student): StudentValidationResult =
   };
 };
 
+/**
+ * Validate submission data
+ */
+export const validateSubmissionData = (submission: Submission): StudentValidationResult => {
+  const errors: string[] = [];
+
+  // Register number validation
+  if (!submission.registerNumber || submission.registerNumber.trim().length === 0) {
+    errors.push('Register number is required');
+  }
+
+  // User name validation
+  if (!submission.userName || submission.userName.trim().length === 0) {
+    errors.push('User name is required');
+  }
+
+  // Code validation
+  if (!submission.code || submission.code.trim().length === 0) {
+    errors.push('Code is required');
+  } else if (submission.code.length > 10000) {
+    errors.push('Code exceeds maximum length');
+  }
+
+  // Language validation
+  const validLanguages = ['javascript', 'python', 'java', 'c', 'cpp'];
+  if (!submission.language || !validLanguages.includes(submission.language)) {
+    errors.push('Invalid programming language');
+  }
+
+  // Assigned question validation
+  if (!submission.assignedQuestion || submission.assignedQuestion.trim().length === 0) {
+    errors.push('Assigned question is required');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
 // --------------------
 // Utility Functions
 // --------------------
@@ -191,7 +298,8 @@ const sanitizeFilter = (filter: StudentFilter): StudentFilter => {
   return {
     department: filter.department?.trim() || '',
     section: filter.section?.trim() || '',
-    year: filter.year?.trim() || ''
+    year: filter.year?.trim() || '',
+    examId: filter.examId?.trim() || ''
   };
 };
 
@@ -220,6 +328,26 @@ const sanitizeStudent = (student: any): Student => {
     year: student.year?.toString().trim() || '',
     hasSubmitted,
     submission
+  };
+};
+
+/**
+ * Sanitize submission data
+ */
+const sanitizeSubmission = (submission: any): Submission => {
+  return {
+    _id: submission._id || `submission-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    registerNumber: submission.registerNumber?.toString().trim() || '',
+    userName: submission.userName?.toString().trim() || '',
+    department: submission.department?.toString().trim() || '',
+    section: submission.section?.toString().trim() || '',
+    year: submission.year?.toString().trim() || '',
+    assignedQuestion: submission.assignedQuestion?.toString().trim() || '',
+    code: submission.code || '',
+    language: submission.language || 'javascript',
+    examId: submission.examId?.toString().trim() || '',
+    submittedAt: submission.submittedAt || new Date().toISOString(),
+    status: submission.status || 'submitted'
   };
 };
 
@@ -266,16 +394,13 @@ export const filterStudents = (students: Student[], searchQuery: string): Studen
  */
 export const getStudentsByFilter = async (filter: StudentFilter): Promise<Student[]> => {
   try {
-    console.log('🚀 [tableService] Starting getStudentsByFilter with filter:', filter);
     
     // Step 1: Sanitize filter
     const sanitizedFilter = sanitizeFilter(filter);
-    console.log('🔧 [tableService] Sanitized filter:', sanitizedFilter);
     
     // Step 2: Validate filter
     const filterValidation = validateStudentFilter(sanitizedFilter);
     if (!filterValidation.isValid) {
-      console.error('❌ [tableService] Filter validation failed:', filterValidation.errors);
       throw new StudentValidationError(
         'Filter validation failed',
         filterValidation.errors.join('; ')
@@ -286,9 +411,7 @@ export const getStudentsByFilter = async (filter: StudentFilter): Promise<Studen
     let token: string | null;
     try {
       token = getToken();
-      console.log('🔑 [tableService] Token retrieved:', token ? 'Yes' : 'No');
     } catch (tokenError) {
-      console.error('❌ [tableService] Token retrieval error:', tokenError);
       if (tokenError instanceof TokenHelperError) {
         throw new AuthenticationError(
           'Failed to retrieve authentication token',
@@ -304,7 +427,6 @@ export const getStudentsByFilter = async (filter: StudentFilter): Promise<Studen
     }
 
     if (!token) {
-      console.error('❌ [tableService] No token found');
       throw new AuthenticationError(
         'Authentication token not found',
         'Please login again to access student data'
@@ -312,7 +434,6 @@ export const getStudentsByFilter = async (filter: StudentFilter): Promise<Studen
     }
 
     // Step 4: Make API request with JWT token
-    console.log('📡 [tableService] Making API request to /table/students with params:', sanitizedFilter);
     
     const response = await axiosInstance.get('/table/students', {
       params: sanitizedFilter,
@@ -322,18 +443,11 @@ export const getStudentsByFilter = async (filter: StudentFilter): Promise<Studen
       timeout: 15000
     });
 
-    console.log('✅ [tableService] API Response received:', {
-      status: response.status,
-      statusText: response.statusText,
-      hasData: !!response.data,
-      dataKeys: response.data ? Object.keys(response.data) : 'no data'
-    });
-
     // Step 5: Handle response
     if (response.status >= 200 && response.status < 300) {
       const isSuccess = response.data?.success !== false && 
-                       !response.data?.error && 
-                       !response.data?.message?.toLowerCase().includes('error');
+                          !response.data?.error && 
+                          !response.data?.message?.toLowerCase().includes('error');
       
       if (isSuccess) {
         // Handle different response structures
@@ -342,28 +456,21 @@ export const getStudentsByFilter = async (filter: StudentFilter): Promise<Studen
         if (Array.isArray(response.data)) {
           // If response is directly an array
           studentsData = response.data;
-          console.log('📊 [tableService] Response is direct array, length:', studentsData.length);
         } else if (response.data?.data && Array.isArray(response.data.data)) {
           // If response has data property with array
           studentsData = response.data.data;
-          console.log('📊 [tableService] Response has data array, length:', studentsData.length);
         } else if (response.data?.students && Array.isArray(response.data.students)) {
           // If response has students property with array
           studentsData = response.data.students;
-          console.log('📊 [tableService] Response has students array, length:', studentsData.length);
         } else {
           // Try to extract any array from response
           const arrayKeys = Object.keys(response.data).filter(key => Array.isArray(response.data[key]));
           if (arrayKeys.length > 0) {
             studentsData = response.data[arrayKeys[0]];
-            console.log('📊 [tableService] Found array in key:', arrayKeys[0], 'length:', studentsData.length);
           } else {
-            console.warn('⚠️ [tableService] No array found in response, using empty array');
             studentsData = [];
           }
         }
-
-        console.log('📋 [tableService] Raw students data received:', studentsData);
         
         // Validate and sanitize each student
         const validatedStudents: Student[] = [];
@@ -374,25 +481,14 @@ export const getStudentsByFilter = async (filter: StudentFilter): Promise<Studen
             
             if (studentValidation.isValid) {
               validatedStudents.push(sanitizedStudent);
-              console.log(`✅ [tableService] Validated student: ${sanitizedStudent.registerNumber} - ${sanitizedStudent.userName}`, {
-                hasSubmitted: sanitizedStudent.hasSubmitted,
-                submission: sanitizedStudent.submission
-              });
             } else {
-              console.warn('⚠️ [tableService] Invalid student data skipped:', studentValidation.errors, 'Student:', student);
+              // Invalid student data skipped
             }
           } catch (studentError) {
-            console.error('❌ [tableService] Error processing student:', studentError, 'Student data:', student);
+            // Error processing student
             // Skip this student but continue processing others
           }
         }
-
-        console.log('📈 [tableService] Validated students count:', validatedStudents.length);
-        console.log('📊 [tableService] Submission statistics:', {
-          total: validatedStudents.length,
-          withSubmissions: validatedStudents.filter(s => s.hasSubmitted).length,
-          withoutSubmissions: validatedStudents.filter(s => !s.hasSubmitted).length
-        });
 
         if (validatedStudents.length === 0) {
           throw new NoStudentsFoundError(
@@ -401,7 +497,6 @@ export const getStudentsByFilter = async (filter: StudentFilter): Promise<Studen
           );
         }
 
-        console.log('🎉 [tableService] Final validated students:', validatedStudents);
         return validatedStudents;
       } else {
         throw new StudentFetchError(
@@ -417,17 +512,8 @@ export const getStudentsByFilter = async (filter: StudentFilter): Promise<Studen
     }
 
   } catch (error: any) {
-    console.error('❌ [tableService] Error in getStudentsByFilter:', {
-      error,
-      message: error?.message,
-      response: error?.response?.data,
-      status: error?.response?.status,
-      stack: error?.stack
-    });
-
     // Handle different types of errors
     if (error instanceof TableServiceError) {
-      console.log('🔄 [tableService] Re-throwing TableServiceError:', error.message);
       throw error;
     }
 
@@ -436,8 +522,6 @@ export const getStudentsByFilter = async (filter: StudentFilter): Promise<Studen
       const status = error.response.status;
       const serverMessage = error.response.data?.message || error.response.statusText;
       const serverDetails = error.response.data?.details || error.response.data;
-
-      console.log('📡 [tableService] Axios response error:', { status, serverMessage, serverDetails });
 
       let serviceError: TableServiceError;
 
@@ -495,7 +579,6 @@ export const getStudentsByFilter = async (filter: StudentFilter): Promise<Studen
       throw serviceError;
 
     } else if (error.request) {
-      console.log('🌐 [tableService] Network error - no response received');
       throw new NetworkError(
         'No response received from server',
         'Network connection may be unavailable or server is down',
@@ -503,7 +586,6 @@ export const getStudentsByFilter = async (filter: StudentFilter): Promise<Studen
       );
 
     } else {
-      console.log('💥 [tableService] Unexpected error:', error.message);
       throw new StudentFetchError(
         `Unexpected error: ${error.message}`,
         'An unexpected error occurred while fetching students',
@@ -514,32 +596,247 @@ export const getStudentsByFilter = async (filter: StudentFilter): Promise<Studen
 };
 
 /**
+ * Get submission by register number
+ */
+export const getSubmissionByRegisterNumber = async (registerNumber: string): Promise<Submission> => {
+  try {
+    
+    // Validate register number
+    if (!registerNumber || registerNumber.trim().length === 0) {
+      throw new SubmissionError('Register number is required', 'VALIDATION_ERROR', 400);
+    }
+
+    // Get authentication token
+    const token = getToken();
+    if (!token) {
+      throw new AuthenticationError(
+        'Authentication token not found',
+        'Please login again to access submission data'
+      );
+    }
+
+    
+    const response = await axiosInstance.get(`table/submissions/${registerNumber}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      timeout: 15000
+    });
+
+    // Handle response
+    if (response.status >= 200 && response.status < 300) {
+      if (response.data?.success && response.data?.data) {
+        const submissionData = response.data.data;
+        
+        // Sanitize and validate submission data
+        const sanitizedSubmission = sanitizeSubmission(submissionData);
+        const submissionValidation = validateSubmissionData(sanitizedSubmission);
+        
+        if (submissionValidation.isValid) {
+          return sanitizedSubmission;
+        } else {
+          throw new SubmissionError(
+            'Invalid submission data received',
+            'SUBMISSION_VALIDATION_ERROR',
+            500,
+            submissionValidation.errors.join('; ')
+          );
+        }
+      } else {
+        throw new SubmissionNotFoundError(
+          response.data?.message || 'Submission not found'
+        );
+      }
+    } else {
+      throw new SubmissionFetchError(
+        response.data?.message || 'Failed to fetch submission',
+        `Server returned status: ${response.status}`
+      );
+    }
+
+  } catch (error: any) {
+    // Handle different types of errors
+    if (error instanceof TableServiceError) {
+      throw error;
+    }
+
+    // Handle axios errors
+    if (error.response) {
+      const status = error.response.status;
+      const serverMessage = error.response.data?.message || error.response.statusText;
+
+      switch (status) {
+        case 404:
+          throw new SubmissionNotFoundError(serverMessage);
+        case 401:
+          throw new AuthenticationError(
+            serverMessage || 'Authentication failed',
+            'Token may be expired or invalid'
+          );
+        case 403:
+          throw new AuthenticationError(
+            serverMessage || 'Access forbidden',
+            'You do not have permission to access this submission'
+          );
+        case 400:
+          throw new SubmissionError(
+            serverMessage || 'Bad request',
+            'VALIDATION_ERROR',
+            400
+          );
+        default:
+          throw new SubmissionFetchError(
+            serverMessage || `Request failed with status ${status}`
+          );
+      }
+    } else if (error.request) {
+      throw new NetworkError(
+        'No response received from server',
+        'Network connection may be unavailable'
+      );
+    } else {
+      throw new SubmissionFetchError(
+        error.message || 'Unexpected error occurred while fetching submission'
+      );
+    }
+  }
+};
+
+/**
+ * Download all submissions as ZIP file
+ */
+export const downloadSubmissions = async (filter: StudentFilter): Promise<Blob> => {
+  try {
+    
+    // Step 1: Sanitize filter
+    const sanitizedFilter = sanitizeFilter(filter);
+    
+    // Step 2: Validate filter
+    const filterValidation = validateStudentFilter(sanitizedFilter);
+    if (!filterValidation.isValid) {
+      throw new StudentValidationError(
+        'Filter validation failed for download',
+        filterValidation.errors.join('; ')
+      );
+    }
+
+    // Step 3: Get authentication token
+    const token = getToken();
+    if (!token) {
+      throw new AuthenticationError(
+        'Authentication token not found',
+        'Please login again to download submissions'
+      );
+    }
+
+    // Step 4: Make API request with blob response type
+    
+    const response = await axiosInstance.get('/table/download-submissions', {
+      params: sanitizedFilter,
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      responseType: 'blob', // Important for file downloads
+      timeout: 30000 // Longer timeout for file downloads
+    });
+
+    // Step 5: Handle response
+    if (response.status >= 200 && response.status < 300) {
+      // Check if response is actually a ZIP file
+      const contentType = response.headers['content-type'];
+      if (contentType && contentType.includes('application/zip')) {
+        return response.data;
+      } else {
+        throw new DownloadError(
+          'Invalid file format received from server',
+          `Expected ZIP file but got: ${contentType}`
+        );
+      }
+    } else {
+      throw new DownloadFailedError(
+        'Download request failed',
+        `Server returned status: ${response.status}`
+      );
+    }
+
+  } catch (error: any) {
+    // Handle different types of errors
+    if (error instanceof TableServiceError) {
+      throw error;
+    }
+
+    // Handle axios errors
+    if (error.response) {
+      const status = error.response.status;
+      const serverMessage = error.response.data?.message || error.response.statusText;
+
+      // Try to read error message from blob if it's not a ZIP file
+      if (error.response.data instanceof Blob && error.response.data.type.includes('application/json')) {
+        try {
+          const errorText = await error.response.data.text();
+          const errorData = JSON.parse(errorText);
+          throw new DownloadFailedError(
+            errorData.message || 'Download failed',
+            errorData.details
+          );
+        } catch (parseError) {
+          // If we can't parse the error, use generic message
+        }
+      }
+
+      switch (status) {
+        case 404:
+          throw new NoSubmissionsFoundError(
+            serverMessage || 'No submissions found for download'
+          );
+        case 401:
+          throw new AuthenticationError(
+            serverMessage || 'Authentication failed for download',
+            'Token may be expired or invalid'
+          );
+        case 403:
+          throw new AuthenticationError(
+            serverMessage || 'Access forbidden for download',
+            'You do not have permission to download submissions'
+          );
+        case 400:
+          throw new DownloadError(
+            serverMessage || 'Bad request for download',
+            'VALIDATION_ERROR',
+            400
+          );
+        case 500:
+          throw new DownloadFailedError(
+            serverMessage || 'Server error during download',
+            'Please try again later'
+          );
+        default:
+          throw new DownloadFailedError(
+            serverMessage || `Download failed with status ${status}`
+          );
+      }
+    } else if (error.request) {
+      throw new NetworkError(
+        'No response received from server during download',
+        'Network connection may be unavailable'
+      );
+    } else {
+      throw new DownloadFailedError(
+        error.message || 'Unexpected error occurred during download'
+      );
+    }
+  }
+};
+
+/**
  * Enhanced version with detailed logging
  */
 export const getStudentsByFilterWithLogging = async (filter: StudentFilter): Promise<Student[]> => {
-  console.log('🚀 [tableService] STARTING ENHANCED STUDENT FETCH:', {
-    filter,
-    timestamp: new Date().toISOString(),
-    hasToken: !!getToken()
-  });
-
   try {
     const students = await getStudentsByFilter(filter);
     
-    console.log('✅ [tableService] ENHANCED FETCH SUCCESS:', {
-      totalStudents: students.length,
-      sampleStudent: students[0],
-      studentsWithSubmissions: students.filter(s => s.hasSubmitted).length,
-      timestamp: new Date().toISOString()
-    });
-
     return students;
   } catch (error) {
-    console.error('❌ [tableService] ENHANCED FETCH FAILED:', {
-      error,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
-    });
     throw error;
   }
 };
@@ -577,11 +874,32 @@ export const isNoStudentsFoundError = (error: any): boolean => {
 };
 
 /**
+ * Check if error is due to submission issues
+ */
+export const isSubmissionError = (error: any): boolean => {
+  return error instanceof SubmissionError;
+};
+
+/**
+ * Check if error is due to submission not found
+ */
+export const isSubmissionNotFoundError = (error: any): boolean => {
+  return error instanceof SubmissionNotFoundError;
+};
+
+/**
+ * Check if error is due to download issues
+ */
+export const isDownloadError = (error: any): boolean => {
+  return error instanceof DownloadError;
+};
+
+/**
  * Get user-friendly error message
  */
 export const getUserFriendlyErrorMessage = (error: any): string => {
   if (!isTableServiceError(error)) {
-    return 'An unexpected error occurred while fetching student data';
+    return 'An unexpected error occurred while fetching data';
   }
 
   const errorMessages: Record<string, string> = {
@@ -590,10 +908,37 @@ export const getUserFriendlyErrorMessage = (error: any): string => {
     'AUTHENTICATION_ERROR': 'Please log in to continue.',
     'NO_STUDENTS_FOUND': 'No students found matching your criteria.',
     'NETWORK_ERROR': 'Network connection issue. Please check your internet connection.',
-    'SERVER_ERROR': 'Server error occurred. Please try again later.'
+    'SERVER_ERROR': 'Server error occurred. Please try again later.',
+    'SUBMISSION_NOT_FOUND': 'No submission found for this student.',
+    'SUBMISSION_FETCH_ERROR': 'Failed to fetch submission details.',
+    'SUBMISSION_VALIDATION_ERROR': 'Invalid submission data received.',
+    'VALIDATION_ERROR': 'Invalid request parameters.',
+    'DOWNLOAD_ERROR': 'Error preparing download. Please try again.',
+    'DOWNLOAD_FAILED': 'Download failed. Please try again.',
+    'NO_SUBMISSIONS_FOUND': 'No submissions found for download.'
   };
 
-  return errorMessages[error.code] || error.message || 'A student service error occurred';
+  return errorMessages[error.code] || error.message || 'A service error occurred';
+};
+
+/**
+ * Get user-friendly submission error message
+ */
+export const getSubmissionErrorMessage = (error: any): string => {
+  if (isSubmissionError(error)) {
+    return getUserFriendlyErrorMessage(error);
+  }
+  return 'An unexpected error occurred while fetching submission details.';
+};
+
+/**
+ * Get user-friendly download error message
+ */
+export const getDownloadErrorMessage = (error: any): string => {
+  if (isDownloadError(error)) {
+    return getUserFriendlyErrorMessage(error);
+  }
+  return 'An unexpected error occurred during download.';
 };
 
 // --------------------
@@ -602,8 +947,11 @@ export const getUserFriendlyErrorMessage = (error: any): string => {
 export default {
   getStudentsByFilter,
   getStudentsByFilterWithLogging,
+  getSubmissionByRegisterNumber,
+  downloadSubmissions,
   validateStudentFilter,
   validateStudentData,
+  validateSubmissionData,
   sortStudentsByRegisterNumber,
   sortStudentsByName,
   filterStudents,
@@ -611,14 +959,23 @@ export default {
   isValidationError,
   isAuthenticationError,
   isNoStudentsFoundError,
+  isSubmissionError,
+  isSubmissionNotFoundError,
+  isDownloadError,
   getUserFriendlyErrorMessage,
-  
-  // Error classes
+  getSubmissionErrorMessage,
+  getDownloadErrorMessage,
   TableServiceError,
   StudentValidationError,
   StudentFetchError,
   AuthenticationError,
   NetworkError,
   ServerError,
-  NoStudentsFoundError
+  NoStudentsFoundError,
+  SubmissionError,
+  SubmissionNotFoundError,
+  SubmissionFetchError,
+  DownloadError,
+  DownloadFailedError,
+  NoSubmissionsFoundError
 };

@@ -293,6 +293,7 @@ const CodeCompiler: React.FC = () => {
     const [isSubmitEnabled, setIsSubmitEnabled] = useState<boolean>(false);
     const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
     const [showCountdown, setShowCountdown] = useState<boolean>(false);
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [countdown, setCountdown] = useState<number>(10);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string>('');
@@ -490,11 +491,16 @@ const CodeCompiler: React.FC = () => {
     };
 
     const handleSubmitCode = async () => {
+        setIsSubmitting(true);
+
         try {
-            const result: SubmissionResponse = await codeCompilerService.submitCode(language, code, assignedQuestion);
+            const result: SubmissionResponse = await codeCompilerService.submitCode(
+                language,
+                code,
+                assignedQuestion
+            );
 
             if (result.success) {
-
                 setShowConfirmation(false);
                 setShowCountdown(true);
                 setCountdown(10);
@@ -510,6 +516,8 @@ const CodeCompiler: React.FC = () => {
             console.error('Error submitting code:', error);
             const errorMessage = error.message || 'An error occurred while saving your code.';
             showMessage(errorMessage, 'error');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -555,7 +563,7 @@ const CodeCompiler: React.FC = () => {
         return (
             <>
                 <Header />
-                <Loader overlay={true} />
+                {isSubmitting && <Loader overlay={true} />}
             </>
         );
     }
@@ -811,6 +819,7 @@ const CodeCompiler: React.FC = () => {
                                                 ...(isSubmitActive ? submitButtonActive : {}),
                                                 ...(!isSubmitEnabled ? submitButtonDisabled : {}),
                                             }}
+                                            disabled={!isSubmitEnabled}
                                             onMouseEnter={() => setIsSubmitHovered(true)}
                                             onMouseLeave={() => setIsSubmitHovered(false)}
                                             onMouseDown={() => setIsSubmitActive(true)}
@@ -984,7 +993,7 @@ const CodeCompiler: React.FC = () => {
                             Ready to Submit Your Exam?
                         </h5>
                         <p style={enhancedModalStyles.text}>
-                            Please confirm that you want to finish and submit your exam. This action cannot be undone.
+                            Once you submit, you cannot submit again or make changes. Please confirm you want to finish and submit your exam.
                         </p>
                     </Modal.Body>
                     <Modal.Footer style={enhancedModalStyles.footer}>

@@ -55,27 +55,6 @@ const validationUtils = {
       return { isValid: false, message: "Code exceeds maximum length of 10000 characters" };
     }
 
-    // Check for potentially malicious patterns
-    const dangerousPatterns = [
-      /system\s*\(/gi,
-      /exec\s*\(/gi,
-      /eval\s*\(/gi,
-      /process\./gi,
-      /require\s*\(/gi,
-      /import\s*\(/gi,
-      /fork\s*\(/gi,
-      /spawn\s*\(/gi,
-      /rm\s+-rf/gi,
-      /del\s+/gi,
-      /format\s*\(/gi
-    ];
-
-    for (const pattern of dangerousPatterns) {
-      if (pattern.test(code)) {
-        return { isValid: false, message: "Code contains potentially dangerous operations" };
-      }
-    }
-
     return { isValid: true, message: "Code is valid" };
   },
 
@@ -103,30 +82,7 @@ const validationUtils = {
   // Basic input sanitization
   sanitizeInput: (input: string): string => {
     if (typeof input !== 'string') return input;
-    return input.trim().replace(/[<>]/g, '');
-  },
-
-  // SQL injection prevention
-  hasSQLInjection: (input: string): boolean => {
-    const sqlKeywords = [
-      'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'UNION', 'OR', 'AND', 
-      'WHERE', 'FROM', 'TABLE', 'DATABASE', 'SCRIPT', 'ALTER', 'CREATE'
-    ];
-    const upperInput = input.toUpperCase();
-    return sqlKeywords.some(keyword => upperInput.includes(keyword));
-  },
-
-  // XSS prevention
-  hasXSSAttempt: (input: string): boolean => {
-    const xssPatterns = [
-      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-      /javascript:/gi,
-      /on\w+\s*=/gi,
-      /<iframe/gi,
-      /<object/gi,
-      /<embed/gi
-    ];
-    return xssPatterns.some(pattern => pattern.test(input));
+    return input.trim();
   },
 
   // Validate ObjectId
@@ -168,16 +124,6 @@ const validateSubmitCodeRequest = (req: Request): { isValid: boolean; message: s
   const sanitizedLanguage = validationUtils.sanitizeInput(language);
   const sanitizedCode = validationUtils.sanitizeInput(code);
   const sanitizedQuestion = validationUtils.sanitizeInput(assignedQuestion);
-
-  // Check for SQL injection
-  if (validationUtils.hasSQLInjection(sanitizedCode) || validationUtils.hasSQLInjection(sanitizedQuestion)) {
-    return { isValid: false, message: "Invalid characters detected in input" };
-  }
-
-  // Check for XSS attempts
-  if (validationUtils.hasXSSAttempt(sanitizedCode) || validationUtils.hasXSSAttempt(sanitizedQuestion)) {
-    return { isValid: false, message: "Potential security threat detected" };
-  }
 
   // Validate language
   if (!validationUtils.isValidLanguage(sanitizedLanguage)) {
@@ -259,11 +205,6 @@ export const getExamData = async (req: Request, res: Response): Promise<void> =>
       });
       return;
     }
-
-    // REMOVED: Department format validation
-    // REMOVED: Section format validation  
-    // REMOVED: Year format validation
-    // REMOVED: Register number format validation
 
     // Find exams with validation - use whatever department value exists
     const exams = await ExamModel.find({
@@ -480,8 +421,8 @@ export const submitCode = async (req: Request, res: Response): Promise<void> => 
       department: student.department,
       section: student.section,
       year: student.year.toString(),
-      assignedQuestion: validationUtils.sanitizeInput(assignedQuestion),
-      code: validationUtils.sanitizeInput(code),
+      assignedQuestion: assignedQuestion, // No sanitization needed
+      code: code, // No sanitization needed for code
       language: language.toLowerCase(),
       examId: exam._id.toString(),
       status: "submitted" as const,
@@ -496,7 +437,7 @@ export const submitCode = async (req: Request, res: Response): Promise<void> => 
       $set: { 
         hasSubmitted: true, 
         lastSubmission: new Date(),
-        assignedQuestion: assignedQuestion // Update assigned question if not already set
+        assignedQuestion: assignedQuestion
       }
     });
 
