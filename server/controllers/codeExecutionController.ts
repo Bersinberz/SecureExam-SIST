@@ -190,7 +190,6 @@ export const runCodeController = async (req: Request<{}, {}, RunCodeRequest>, re
   }
 
   try {
-    console.log(`Executing ${language} code...`);
     
     let output: string;
     switch (language) {

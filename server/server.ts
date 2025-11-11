@@ -447,8 +447,6 @@ process.on('unhandledRejection', (reason, promise) => {
 // --------------------
 const startServer = async () => {
   try {
-    console.log('🚀 Starting server...');
-    console.log('📁 Environment:', NODE_ENV);
     logToFile('Starting server...', 'INFO');
     logToFile(`Environment: ${NODE_ENV}`, 'INFO');
     

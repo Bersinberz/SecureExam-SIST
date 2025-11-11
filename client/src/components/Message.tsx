@@ -45,9 +45,9 @@ const Message: React.FC<MessageProps> = ({
   };
 
   const hideMessage = () => {
-    setIsVisible(false); // triggers CSS fade out
+    setIsVisible(false);
     clearInterval(intervalRef.current!);
-    setTimeout(() => onHide(), 400); // remove from DOM after animation
+    setTimeout(() => onHide(), 400);
   };
 
   useEffect(() => {

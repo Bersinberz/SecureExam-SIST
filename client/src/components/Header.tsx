@@ -1,6 +1,5 @@
 import React from "react";
 
-// Images
 import sathyabamaLogo from "../assets/recruitment-at-sathyabama-institute-of-science-and-technology.png";
 import secureLogo from "../assets/securelogo.png";
 

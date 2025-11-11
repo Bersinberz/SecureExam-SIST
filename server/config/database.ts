@@ -103,7 +103,7 @@ const logDatabaseEvent = (level: 'INFO' | 'WARN' | 'ERROR', message: string, det
   } else if (level === 'WARN') {
     console.warn(logMessage, details || '');
   } else {
-    console.log(logMessage, details || '');
+    console.warn(logMessage, details || '');
   }
 };
 
