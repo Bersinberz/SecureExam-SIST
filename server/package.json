@@ -16,12 +16,17 @@
 		"morgan": "^1.10.1",
 		"ms": "^2.1.3",
 		"multer": "^2.0.2",
-		"socket.io": "^4.8.1"
+		"p-limit": "^7.2.0",
+		"socket.io": "^4.8.1",
+		"uuid": "^13.0.0"
 	},
 	"scripts": {
 		"start": "ts-node server.ts",
 		"dev": "nodemon server.ts",
-		"build": "tsc"
+		"build": "tsc",
+		"build:workers": "node build-workers.js",
+		"prestart": "npm run build:workers",
+		"predev": "npm run build:workers"
 	},
 	"devDependencies": {
 		"@types/archiver": "^7.0.0",

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { Student } from "../models/studentModel";
-import { ExamModel } from "../models/examModel";
+import { ExamModel } from "../models/ExamModel";
 import { getUserIdFromToken, getUserTypeFromToken } from "../utils/tokenUtils";
 import Submission from "../models/Submission";
 import { Types } from "mongoose";

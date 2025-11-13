@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { createToken } from "../utils/tokenUtils";
 import { Student } from "../models/studentModel";
-import { ExamModel } from "../models/examModel";
-import { Staff } from "../models/staffModel";
+import { ExamModel } from "../models/ExamModel";
+import { Staff } from "../models/StaffModel";
 
 // ------------------ LOGIN CONTROLLER ------------------
 export const login = async (req: Request, res: Response): Promise<void> => {

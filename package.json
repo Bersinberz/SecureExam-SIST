@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Secure Exam - Online Examination System",
   "main": "electron/main.js",
-  "author": "Your Name",
+  "author": "Bersin",
   "scripts": {
     "dev": "concurrently -n \"SERVER,CLIENT,ELECTRON\" -c \"green,blue,magenta\" \"npm run server\" \"npm run client\" \"npm run electron-wait\"",
     "server": "cd server && npm run dev",
@@ -17,8 +17,6 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:win": "electron-builder --win",
-    "dist:mac": "electron-builder --mac",
-    "dist:linux": "electron-builder --linux",
     "install-all": "npm install && cd server && npm install && cd ../client && npm install"
   },
   "devDependencies": {
@@ -30,26 +28,22 @@
   "build": {
     "appId": "com.secureexam.app",
     "productName": "Secure Exam",
+
     "directories": {
       "output": "dist-electron"
     },
+
     "files": [
       "electron/**/*",
       "client/dist/**/*",
       "server/**/*"
     ],
-    "mac": {
-      "category": "public.app-category.education",
-      "target": "dmg"
-    },
+
     "win": {
       "target": "nsis",
       "icon": "client/public/favicon.ico"
     },
-    "linux": {
-      "target": "AppImage",
-      "category": "Education"
-    },
+
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true

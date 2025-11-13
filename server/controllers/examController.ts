@@ -1,9 +1,8 @@
-// controllers/examController.ts
 import { Request, Response } from "express";
 import fs from "fs";
 import path from "path";
 import csvParser from "csv-parser";
-import { ExamModel } from "../models/examModel";
+import { ExamModel } from "../models/ExamModel";
 import { getUserIdFromToken } from "../utils/tokenUtils";
 
 interface MulterRequest extends Request {
@@ -139,8 +138,10 @@ const parseCSVFile = async (filePath: string): Promise<{ questions: string[]; er
   const questions: string[] = [];
   const errors: string[] = [];
 
-  return new Promise((resolve, reject) => {
-    if (!fs.existsSync(filePath)) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await fs.promises.access(filePath);
+    } catch {
       reject(new Error("CSV file not found"));
       return;
     }
@@ -243,9 +244,7 @@ const normalizeAcademicYear = (year: string): string => {
 // Cleanup function for temporary files
 const cleanupFile = async (filePath: string): Promise<void> => {
   try {
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
+    await fs.promises.unlink(filePath);
   } catch (error) {
     console.error("Failed to cleanup file:", filePath, error);
   }
@@ -320,9 +319,7 @@ export const createExam = async (req: MulterRequest, res: Response) => {
     // Ensure uploads folder exists
     const uploadDir = path.join(__dirname, "..", "uploads");
     try {
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
+      await fs.promises.mkdir(uploadDir, { recursive: true });
     } catch (error: any) {
       throw new Error(`Failed to create upload directory: ${error.message}`);
     }
@@ -334,7 +331,7 @@ export const createExam = async (req: MulterRequest, res: Response) => {
     tempFilePath = filePath;
 
     try {
-      fs.renameSync(file!.path, filePath);
+      await fs.promises.rename(file!.path, filePath);
     } catch (error: any) {
       throw new Error(`Failed to save file: ${error.message}`);
     }
@@ -376,7 +373,7 @@ export const createExam = async (req: MulterRequest, res: Response) => {
       section: section.trim(),
       year: normalizedYear,
       questions,
-      createdBy: userId, // Add user ID from token
+      createdBy: userId,
       createdAt: new Date(),
       parseWarnings: parseErrors.length > 0 ? parseErrors : undefined
     });
