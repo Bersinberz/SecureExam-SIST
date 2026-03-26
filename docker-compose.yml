@@ -1,0 +1,71 @@
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: prod-server
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./server/.env.production
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    volumes:
+      - uploads:/app/uploads
+      - logs:/app/logs
+    networks:
+      - secure-exam-network
+
+  client:
+    build: ./client
+    container_name: prod-client
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - server
+    restart: unless-stopped
+    networks:
+      - secure-exam-network
+
+  mongo:
+    image: mongo:6.0
+    container_name: prod-mongo
+    restart: unless-stopped
+    env_file:
+      - ./mongo.env
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: >
+        echo 'db.runCommand("ping").ok' |
+        mongosh localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - secure-exam-network
+
+volumes:
+  mongo-data:
+  uploads:
+  logs:
+
+networks:
+  secure-exam-network:
+    driver: bridge

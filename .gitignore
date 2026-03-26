@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment files — never commit real secrets
+.env
+.env.production
+.env.development
+mongo.env
+
+# Runtime artifacts
+server/temp_code_exec/*
+!server/temp_code_exec/.gitkeep
+server/uploads/*
+!server/uploads/.gitkeep
+server/logs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.sw?
