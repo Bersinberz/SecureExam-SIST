@@ -134,9 +134,9 @@ MONGO_INITDB_ROOT_PASSWORD=<your_db_admin_password>
 > ⚠️ **SECURITY WARNING:** Never push `.env.production` or `mongo.env` with real credentials to source control targeting public or untrusted domains.
 
 ### 2️⃣ Secure SSL Certificate Automation
-Generate a safe certificate through Let's Encrypt standalone service. Validate port `80` configuration appropriately:
+Generate a safe certificate through Let's Encrypt standalone service for your own domain. Validate port `80` configuration appropriately:
 ```bash
-certbot certonly --standalone -d securexam.info -d www.securexam.info
+certbot certonly --standalone -d <your_domain.com> -d <www.your_domain.com>
 ```
 
 ### 3️⃣ Scale & Deploy via Docker Compose
