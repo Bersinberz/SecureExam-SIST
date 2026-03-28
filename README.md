@@ -107,13 +107,30 @@ npm run dev
 
 ### 1️⃣ Configure Platform Secrets
 
-```bash
-# Prepare Server Configuration
-cp server/.env.production server/.env.production.local
+Create the production environment files and fill in the required details:
 
-# Prepare MongoDB credentials
-cp mongo.env mongo.env.local
+**Server Environment (`server/.env.production`):**
+```env
+NODE_ENV=production
+PORT=<your_production_port>
+MONGO_URI=<your_production_mongodb_connection_string>
+JWT_SECRET=<your_secure_jwt_secret>
+JWT_EXPIRY=<jwt_expiry_time>
+CORS_ORIGINS=<comma_separated_allowed_production_origins>
+FRONTEND_URL=<your_production_frontend_url>
 ```
+
+**Client Environment (`client/.env.production`):**
+```env
+VITE_API_URL=<your_production_api_url>
+```
+
+**MongoDB Credentials (`mongo.env`):**
+```env
+MONGO_INITDB_ROOT_USERNAME=<your_db_admin_username>
+MONGO_INITDB_ROOT_PASSWORD=<your_db_admin_password>
+```
+
 > ⚠️ **SECURITY WARNING:** Never push `.env.production` or `mongo.env` with real credentials to source control targeting public or untrusted domains.
 
 ### 2️⃣ Secure SSL Certificate Automation
