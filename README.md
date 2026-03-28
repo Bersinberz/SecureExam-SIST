@@ -58,14 +58,19 @@ Ensure you have the following installed on your local environment before proceed
 <details>
 <summary><b>Server Configuration ⚙️</b> (Click to Expand)</summary>
 
-Create a `.env` file in the `server` directory and fill in the details like so:
+Create a `.env.development` file in the `server` directory and fill in the required details:
 
 ```env
-# server/.env
-MONGO_URI=mongodb://localhost:27017/securexam
-JWT_SECRET=your_super_secret_key_64_characters_minimum
-PORT=5000
-CORS_ORIGINS=http://localhost:5173
+# server/.env.development
+NODE_ENV=<development_or_production>
+PORT=<your_port_number>
+
+MONGO_URI=<your_mongodb_connection_string>
+JWT_SECRET=<your_secure_jwt_secret>
+JWT_EXPIRY=<jwt_expiry_time>
+
+CORS_ORIGINS=<comma_separated_allowed_origins>
+FRONTEND_URL=<your_frontend_url>
 ```
 
 ```bash
@@ -78,11 +83,11 @@ npm run dev
 <details>
 <summary><b>Client Configuration 🎨</b> (Click to Expand)</summary>
 
-Create a `.env` file in the `client` directory and fill in the details like so:
+Create a `.env.development` file in the `client` directory and fill in the details like so:
 
 ```env
-# client/.env
-VITE_API_URL=http://localhost:5000/api
+# client/.env.development
+VITE_API_URL=<your_api_url>
 ```
 
 ```bash
