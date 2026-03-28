@@ -1,11 +1,12 @@
 import express from "express";
 import { downloadAllSubmissions, getStudentsByFilter, getSubmissionByRegisterNumber } from "../controllers/tableController";
-import { verifyToken } from "../middleware/jwtMiddleware";
+import { verifyToken, requireRole } from "../middleware/jwtMiddleware";
 
 const router = express.Router();
 
-router.get("/students", verifyToken, getStudentsByFilter);
-router.get("/submissions/:registerNumber", verifyToken, getSubmissionByRegisterNumber);
-router.get('/download-submissions', verifyToken, downloadAllSubmissions);
+// All table endpoints are staff-only
+router.get("/students",                  verifyToken, requireRole(["staff"]), getStudentsByFilter);
+router.get("/submissions/:registerNumber", verifyToken, requireRole(["staff"]), getSubmissionByRegisterNumber);
+router.get("/download-submissions",      verifyToken, requireRole(["staff"]), downloadAllSubmissions);
 
 export default router;

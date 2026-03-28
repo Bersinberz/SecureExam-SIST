@@ -6,6 +6,7 @@ import Header from '../components/Header';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
 import { codeCompilerService } from '../services/codeCompilerService';
+import windowService from '../services/windowService';
 import type { ExamData, StudentData, CodeExecutionResult, SubmissionResponse } from '../services/codeCompilerService';
 
 const THEME_PRIMARY = '#9e1c3f';
@@ -332,22 +333,26 @@ const CodeCompiler: React.FC = () => {
 
         if (!token) {
             setError('Please login first.');
-            setTimeout(() => {
-                window.location.href = '/login';
-            }, 2000);
+            setTimeout(() => { window.location.href = '/'; }, 2000);
             return;
         }
 
         fetchExamData();
         initializeTerminal();
+        // Submit is always enabled — server enforces the time limit
+        setIsSubmitEnabled(true);
 
-        const submitTimer = setTimeout(() => {
-            setIsSubmitEnabled(true);
-            showMessage('Submit button is now enabled', 'info');
-        }, 300000);
+        // Listen for security violations from Electron main process
+        let cleanupViolationListener: (() => void) | undefined;
+        if (windowService.isElectron()) {
+            cleanupViolationListener = windowService.onSecurityViolation((data) => {
+                console.warn('[SecureExam] Security violation detected:', data);
+                showMessage(`Security warning: ${data.type} detected`, 'error', 3000);
+            });
+        }
 
         return () => {
-            clearTimeout(submitTimer);
+            if (cleanupViolationListener) cleanupViolationListener();
         };
     }, []);
 
@@ -410,12 +415,19 @@ const CodeCompiler: React.FC = () => {
                 setStudentData(response.data.student);
                 setAssignedQuestion(response.data.assignedQuestion);
 
-                const examDurationMinutes = response.data.exam.time;
-                setRemainingTime(examDurationMinutes * 60);
+                // Seed timer from server — authoritative remaining time
+                const serverRemainingSeconds = Math.floor((response.data.timeRemainingMs ?? 0) / 1000);
+                setRemainingTime(serverRemainingSeconds);
+
+                // If already submitted, show message and redirect
+                if (response.data.hasSubmitted) {
+                    setError('You have already submitted this exam.');
+                    return;
+                }
 
                 const timerInterval = setInterval(() => {
                     setRemainingTime(prev => {
-                        if (prev <= 0) {
+                        if (prev <= 1) {
                             clearInterval(timerInterval);
                             handleAutoSubmit();
                             return 0;
@@ -426,13 +438,10 @@ const CodeCompiler: React.FC = () => {
 
             } else {
                 setError(response.message || 'Failed to fetch exam data');
-                showMessage(response.message || 'Failed to fetch exam data', 'error');
             }
         } catch (error: any) {
-            console.error('Error fetching exam details:', error);
             const errorMessage = error.message || 'Failed to fetch exam details. Please try again.';
             setError(errorMessage);
-            showMessage(errorMessage, 'error');
         } finally {
             setLoading(false);
         }
@@ -506,14 +515,12 @@ const CodeCompiler: React.FC = () => {
                 setCountdown(10);
 
                 setTimeout(() => {
-                    removeToken();
-                    window.close();
+                    handleWindowClose();
                 }, 10000);
             } else {
                 showMessage(result.message || 'Failed to save code. Please try again.', 'error');
             }
         } catch (error: any) {
-            console.error('Error submitting code:', error);
             const errorMessage = error.message || 'An error occurred while saving your code.';
             showMessage(errorMessage, 'error');
         } finally {
@@ -521,20 +528,22 @@ const CodeCompiler: React.FC = () => {
         }
     };
 
-    const handleWindowClose = () => {
+    const handleWindowClose = async () => {
         try {
-            removeToken();
-            if (window.opener) {
-                window.close();
-            } else {
-                window.open('', '_self', '');
-                window.close();
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 1000);
+            // Exit kiosk mode before closing
+            if (windowService.isElectron()) {
+                await windowService.exitKiosk();
             }
-        } catch (e) {
-            console.error('Error closing the window:', e);
+
+            const token = getToken();
+            if (token) {
+                await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${token}` },
+                }).catch(() => {});
+            }
+        } finally {
+            removeToken();
             window.location.href = '/';
         }
     };

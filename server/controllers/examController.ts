@@ -380,7 +380,7 @@ export const createExam = async (req: MulterRequest, res: Response) => {
 
     await exam.save();
 
-    // Cleanup temporary file on success
+    // Delete the uploaded CSV immediately — no need to keep it
     await cleanupFile(filePath);
     tempFilePath = null;
 

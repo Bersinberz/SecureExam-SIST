@@ -29,7 +29,15 @@ axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: AxiosError<{ message?: string }>) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid — clear storage and redirect to login
+      // Token expired, invalid, or revoked — clear and redirect
+      const token = localStorage.getItem("jwtToken");
+      if (token) {
+        // Best-effort server-side revocation
+        fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => {});
+      }
       localStorage.removeItem("jwtToken");
       if (window.location.pathname !== "/") {
         window.location.href = "/";

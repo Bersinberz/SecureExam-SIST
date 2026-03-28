@@ -344,7 +344,8 @@ const ExamStudents: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [isViewHovered, setIsViewHovered] = useState<{ [key: string]: boolean }>({});
   const [isViewActive, setIsViewActive] = useState<{ [key: string]: boolean }>({});
-  const [loadingDownload, setLoadingDownload] = useState(false); // ADD THIS
+  const [loadingDownload, setLoadingDownload] = useState(false);
+  const [loadingFinish, setLoadingFinish] = useState(false);
 
   useEffect(() => {
     if (showSubmissionModal) {
@@ -405,6 +406,25 @@ const ExamStudents: React.FC = () => {
       ...prev,
       [registerNumber]: !prev[registerNumber],
     }));
+  };
+
+  const handleFinishExam = async () => {
+    if (!window.confirm('Are you sure you want to finish the exam? This will log you out.')) return;
+    try {
+      setLoadingFinish(true);
+      const token = localStorage.getItem('jwtToken');
+      if (token) {
+        await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+    } catch {
+      // logout best-effort — always clear local state
+    } finally {
+      localStorage.removeItem('jwtToken');
+      navigate('/');
+    }
   };
 
   const handleDownload = async () => {
@@ -689,7 +709,18 @@ const ExamStudents: React.FC = () => {
                           )}
                           <span>Download</span>
                         </button>
-                        <button className="btn btn-gradient-finish text-white px-4 py-2 rounded-pill fw-semibold">Finish Exam</button>
+                        <button
+                          className="btn btn-gradient-finish text-white px-4 py-2 rounded-pill fw-semibold"
+                          onClick={handleFinishExam}
+                          disabled={loadingFinish}
+                        >
+                          {loadingFinish ? (
+                            <div className="spinner-border spinner-border-sm me-2" role="status">
+                              <span className="visually-hidden">Loading...</span>
+                            </div>
+                          ) : null}
+                          Finish Exam
+                        </button>
                       </div>
                     </div>
                   </>

@@ -48,6 +48,8 @@ export interface ExamDataResponse {
     exam: ExamData;
     student: StudentData;
     assignedQuestion: string;
+    timeRemainingMs?: number;
+    hasSubmitted?: boolean;
   };
   message?: string;
 }

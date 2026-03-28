@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { SignOptions } from "jsonwebtoken";
+import { isTokenBlocked } from "../utils/tokenBlocklist";
 
 // --------------------
 // Interfaces and Types
@@ -268,6 +269,11 @@ export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction)
         'Authentication token is required',
         'Include Authorization header with Bearer token'
       );
+    }
+
+    // Reject logged-out tokens
+    if (isTokenBlocked(token)) {
+      throw new TokenInvalidError('Token has been revoked. Please log in again.');
     }
 
     // Validate token

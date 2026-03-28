@@ -3,6 +3,7 @@ import Message from "../components/Message.tsx";
 import { login, type LoginData, handleLoginError, isLoginError } from "../services/authService";
 import { useNavigate } from "react-router-dom";
 import Loader from "../components/Loader.tsx";
+import windowService from "../services/windowService";
 
 // Images
 import sathyabamaIcon from "../assets/images-removebg-preview.png";
@@ -291,11 +292,17 @@ const Login: React.FC = () => {
     }
   };
 
-  const redirectToExam = (identifier: string) => {
+  const redirectToExam = async (identifier: string) => {
     if (!identifier || (userType === "student" && !validationRules.registerNumber.pattern.test(identifier))) {
       displayMessage("Invalid user identifier for exam redirect", "error");
       return;
     }
+
+    // Activate kiosk mode for student exam sessions
+    if (windowService.isElectron()) {
+      await windowService.enterKiosk();
+    }
+
     navigate(`/code-compiler`);
   };
 
