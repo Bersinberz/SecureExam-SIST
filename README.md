@@ -155,21 +155,7 @@ curl https://securexam.info/api/health
 
 <img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%" height="3px">
 
-## 🔐 Environment Variables
 
-Ensure variables match across your specific `server/.env.*` file instances relying on active environments!
-
-| Variable Name | Required | Description | Default Target |
-|:---|:---:|:---|:---|
-| `MONGO_URI` | ✅ | Full MongoDB URI Connection string resolving database identity | _None_ |
-| `JWT_SECRET` | ✅ | Cryptographically secure signature string (`min: 64 characters`) | _None_ |
-| `JWT_EXPIRY` | ❌ | Web Token authorization validation maximum lifetime | `8h` |
-| `CORS_ORIGINS` | ❌ | Valid comma-separated domains verified to communicate | `http://localhost:5173` |
-| `PORT` | ❌ | Operational port for HTTP listener runtime | `5000` |
-
-<br>
-
-<img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%" height="3px">
 
 ## 🗂️ Project Structure
 
@@ -201,5 +187,5 @@ graph TD;
 <br>
 
 <div align="center">
-  <sub>Built with ❤️ towards secure testing capabilities by the SecureExam Developers. © 2026</sub>
+  <sub>Built with ❤️ by Bersinberz. © 2026</sub>
 </div>
