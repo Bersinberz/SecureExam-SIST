@@ -15,13 +15,6 @@
   <a href="#-stack"><img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" /></a>
 </p>
 
-<p align="center">
-  <a href="#-prerequisites">Prerequisites</a> •
-  <a href="#-getting-started">Getting Started</a> •
-  <a href="#-production-deployment">Deployment</a> •
-  <a href="#-project-structure">Project Structure</a>
-</p>
-
 <img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%" height="3px">
 
 </div>
@@ -65,9 +58,18 @@ Ensure you have the following installed on your local environment before proceed
 <details>
 <summary><b>Server Configuration ⚙️</b> (Click to Expand)</summary>
 
+Create a `.env` file in the `server` directory and fill in the details like so:
+
+```env
+# server/.env
+MONGO_URI=mongodb://localhost:27017/securexam
+JWT_SECRET=your_super_secret_key_64_characters_minimum
+PORT=5000
+CORS_ORIGINS=http://localhost:5173
+```
+
 ```bash
 cd server
-cp .env.development .env.development.local   # Fill in your database and API values
 npm install
 npm run dev
 ```
@@ -75,6 +77,13 @@ npm run dev
 
 <details>
 <summary><b>Client Configuration 🎨</b> (Click to Expand)</summary>
+
+Create a `.env` file in the `client` directory and fill in the details like so:
+
+```env
+# client/.env
+VITE_API_URL=http://localhost:5000/api
+```
 
 ```bash
 cd client
