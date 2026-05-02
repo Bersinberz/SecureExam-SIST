@@ -257,7 +257,7 @@ export const generateTokenWithCustomExpiry = (
 // --------------------
 // Main Middleware Function
 // --------------------
-export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const verifyToken = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -271,8 +271,8 @@ export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction)
       );
     }
 
-    // Reject logged-out tokens
-    if (isTokenBlocked(token)) {
+    // Reject logged-out tokens (async Redis check)
+    if (await isTokenBlocked(token)) {
       throw new TokenInvalidError('Token has been revoked. Please log in again.');
     }
 
@@ -293,7 +293,7 @@ export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction)
   } catch (error: any) {
     // Handle custom token errors
     if (error instanceof TokenValidationError) {
-      return res.status(error.statusCode).json({
+      res.status(error.statusCode).json({
         success: false,
         message: error.message,
         error: {
@@ -302,10 +302,11 @@ export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction)
           timestamp: new Date().toISOString()
         }
       });
+      return;
     }
 
     // Handle unexpected errors
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: 'Internal server error during authentication',
       error: {

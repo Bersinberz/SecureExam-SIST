@@ -8,7 +8,8 @@ import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
 import morgan from "morgan";
-import { connectMongoose, isDbConnected } from "./config/database";
+import { connectMongoose, isDbConnected, disconnectMongoose } from "./config/database";
+import { closeBlocklist } from "./utils/tokenBlocklist";
 import { requestQueue, heavyQueue } from "./middleware/requestQueue";
 
 import authRoutes          from "./routes/authRoutes";
@@ -26,6 +27,11 @@ const NODE_ENV = process.env.NODE_ENV || "development";
 const missing = ["MONGO_URI", "JWT_SECRET"].filter(k => !process.env[k]);
 if (missing.length) throw new Error(`Missing required env vars: ${missing.join(", ")}`);
 
+// Warn if weak JWT secret is used in production
+if (NODE_ENV === "production" && process.env.JWT_SECRET!.length < 32) {
+  throw new Error("JWT_SECRET must be at least 32 characters in production");
+}
+
 // --------------------
 // App
 // --------------------
@@ -34,10 +40,22 @@ const app = express();
 // Security headers via helmet
 app.use(helmet({
   crossOriginEmbedderPolicy: false, // allow Monaco editor CDN assets
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc:  ["'self'"],
+      styleSrc:   ["'self'", "'unsafe-inline'"],
+      imgSrc:     ["'self'", "data:"],
+      connectSrc: ["'self'"],
+      fontSrc:    ["'self'"],
+      objectSrc:  ["'none'"],
+      frameSrc:   ["'none'"],
+    },
+  },
 }));
 
 // Compression
-app.use(compression());
+app.use(compression({ level: 6, threshold: 1024 }));
 
 // Request logging
 app.use(morgan(NODE_ENV === "production" ? "combined" : "dev"));
@@ -55,9 +73,12 @@ app.use(cors({
   optionsSuccessStatus: 200,
 }));
 
-// Body parsing
-app.use(express.json({ limit: "1mb" }));
-app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+// Body parsing — keep limits tight
+app.use(express.json({ limit: "512kb" }));
+app.use(express.urlencoded({ extended: true, limit: "512kb" }));
+
+// Trust proxy — required when behind Nginx so rate limiters see real IPs
+app.set("trust proxy", 1);
 
 // --------------------
 // Health check (no auth, no queue)
@@ -138,12 +159,12 @@ export const startServer = async (): Promise<void> => {
   });
 
   // Graceful shutdown — wait for in-flight requests
-  const shutdown = (signal: string) => {
+  const shutdown = async (signal: string) => {
     console.log(`[server] ${signal} received, shutting down…`);
     server.close(async () => {
       try {
-        const { disconnectMongoose } = await import("./config/database");
         await disconnectMongoose();
+        await closeBlocklist();
         console.log("[server] shutdown complete");
         process.exit(0);
       } catch {

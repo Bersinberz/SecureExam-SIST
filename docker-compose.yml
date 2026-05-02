@@ -1,17 +1,71 @@
 services:
+  # ── Redis — token blocklist + distributed rate limiting ──────────────────
+  redis:
+    image: redis:7.2-alpine
+    container_name: prod-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save ""
+      --appendonly no
+      --requirepass "${REDIS_PASSWORD}"
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - secure-exam-network
+
+  # ── MongoDB ───────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:6.0
+    container_name: prod-mongo
+    restart: unless-stopped
+    env_file:
+      - ./mongo.env
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
+    command: >
+      mongod
+      --wiredTigerCacheSizeGB 4
+      --setParameter diagnosticDataCollectionEnabled=false
+    healthcheck:
+      test: >
+        echo 'db.runCommand("ping").ok' |
+        mongosh localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - secure-exam-network
+
+  # ── Node.js API server ────────────────────────────────────────────────────
   server:
     build:
       context: ./server
       dockerfile: Dockerfile
     container_name: prod-server
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     env_file:
       - ./server/.env.production
     environment:
       - NODE_ENV=production
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
     depends_on:
       mongo:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
@@ -23,9 +77,20 @@ services:
     volumes:
       - uploads:/app/uploads
       - logs:/app/logs
+      - /tmp/code_exec:/app/temp_code_exec   # tmpfs-backed on host for fast I/O
+    # Resource limits — leave headroom for GPU workloads
+    deploy:
+      resources:
+        limits:
+          cpus: '8'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 2G
     networks:
       - secure-exam-network
 
+  # ── Nginx + React SPA ─────────────────────────────────────────────────────
   client:
     build: ./client
     container_name: prod-client
@@ -40,29 +105,9 @@ services:
     networks:
       - secure-exam-network
 
-  mongo:
-    image: mongo:6.0
-    container_name: prod-mongo
-    restart: unless-stopped
-    env_file:
-      - ./mongo.env
-    ports:
-      - "127.0.0.1:27017:27017"
-    volumes:
-      - mongo-data:/data/db
-    healthcheck:
-      test: >
-        echo 'db.runCommand("ping").ok' |
-        mongosh localhost:27017/test --quiet
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    networks:
-      - secure-exam-network
-
 volumes:
   mongo-data:
+  mongo-config:
   uploads:
   logs:
 

@@ -6,10 +6,15 @@ import { Request, Response, NextFunction } from "express";
  * Separates "heavy" routes (code execution) from "light" routes (auth, DB reads)
  * so a flood of run-code requests cannot starve logins or submissions.
  *
+ * Sizing for 300+ concurrent users:
+ *   - requestQueue: 150 concurrent handles burst traffic across all API routes
+ *   - heavyQueue:   20 concurrent for code execution (CPU-bound, each takes 5-15s)
+ *     With 4 PM2 workers that's 80 simultaneous code runs — enough for 300 students
+ *     where not everyone runs code at the exact same millisecond.
+ *
  * Usage:
  *   app.use("/api/execute", heavyQueue, ...)   ← tight limit
- *   app.use("/api/auth",    lightQueue, ...)   ← generous limit
- *   app.use("/api/...",     requestQueue, ...) ← default
+ *   app.use("/api/auth",    requestQueue, ...) ← generous limit
  */
 
 interface QueueEntry {
@@ -31,15 +36,8 @@ function makeQueue(maxConcurrent: number, maxQueued: number, timeoutMs: number) 
   return (req: Request, res: Response, nextFn: NextFunction) => {
     const run = () => {
       active++;
-      res.on("finish", () => {
-        active--;
-        next();
-      });
-      res.on("close", () => {
-        // client disconnected before finish
-        active--;
-        next();
-      });
+      res.on("finish", () => { active--; next(); });
+      res.on("close",  () => { active--; next(); }); // client disconnected
       nextFn();
     };
 
@@ -69,13 +67,13 @@ function makeQueue(maxConcurrent: number, maxQueued: number, timeoutMs: number) 
 }
 
 // General API routes — auth, exam management, table reads
-// 50 concurrent, queue up to 200, 15 s wait
-export const requestQueue = makeQueue(50, 200, 15_000);
+// 150 concurrent, queue up to 500, 20s wait
+export const requestQueue = makeQueue(150, 500, 20_000);
 
-// Code execution — CPU/memory heavy, keep tight
-// 10 concurrent (matches pLimit in codeExecutionController), queue up to 100, 30 s wait
-export const heavyQueue = makeQueue(10, 100, 30_000);
+// Code execution — CPU/memory heavy, keep tight per worker
+// 20 concurrent (matches pLimit in codeExecutionController), queue up to 200, 45s wait
+// With 4 PM2 workers = 80 simultaneous executions across the cluster
+export const heavyQueue = makeQueue(20, 200, 45_000);
 
-// Light routes — health, status
-// Effectively unlimited
-export const lightQueue = makeQueue(500, 0, 5_000);
+// Light routes — health, status (effectively unlimited)
+export const lightQueue = makeQueue(1000, 0, 5_000);

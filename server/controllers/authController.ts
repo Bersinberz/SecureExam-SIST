@@ -8,12 +8,12 @@ import { blockToken } from "../utils/tokenBlocklist";
 import { AuthRequest } from "../middleware/jwtMiddleware";
 
 // ------------------ LOGOUT ------------------
-export const logout = (req: AuthRequest, res: Response): void => {
+export const logout = async (req: AuthRequest, res: Response): Promise<void> => {
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(" ")[1];
 
   if (token && req.user?.exp) {
-    blockToken(token, req.user.exp);
+    await blockToken(token, req.user.exp);
   }
 
   res.status(200).json({ success: true, message: "Logged out successfully." });

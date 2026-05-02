@@ -24,4 +24,9 @@ const ExamSchema = new Schema<IExam>({
   parseWarnings: [{ type: String }]
 });
 
+// Composite index for the most common query pattern (student login + getExamData)
+ExamSchema.index({ department: 1, section: 1, year: 1 });
+// Unique constraint: one exam per name+dept+section+year
+ExamSchema.index({ examName: 1, department: 1, section: 1, year: 1 }, { unique: true });
+
 export const ExamModel = mongoose.model<IExam>("Exam", ExamSchema);
